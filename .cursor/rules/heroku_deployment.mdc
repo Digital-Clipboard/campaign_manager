@@ -1,0 +1,77 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+## ⚙️ Heroku Integration Structure – Deployment Rules
+
+### ✅ Overview
+We use **Heroku** for hosting and **GitHub** for CI/CD-driven deployments. Our process is fully automated and structured by GitHub branches. This document outlines the deployment logic and monitoring responsibilities for automated agents (e.g., Cursor) and developers.
+
+---
+
+### ♻️ Deployment Workflow Summary
+
+| GitHub Branch | Deployment Target        |
+|---------------|--------------------------|
+| `staging`     | Heroku Staging App       |
+| `main`        | Heroku Production App    |
+
+> ⚠️ **Manual deployments are not allowed** except in emergency situations. Always use CI/CD.
+
+---
+
+### 👇 Step-by-Step Deployment Monitoring & Action Plan
+
+#### 1. On Push to `staging` or `main`
+- **Trigger:** A new commit is pushed to either branch.
+- **Agent Action:** Begin monitoring the associated **GitHub Actions workflow**.
+
+#### 2. CI Status Monitoring
+- ✅ **If CI passes:**
+  - Proceed to deployment monitoring.
+- ❌ **If CI fails:**
+  - **Do NOT just record the failure.**
+  - Perform a **root cause analysis** of the failed job(s).
+    - Check logs in the GitHub Actions UI.
+    - Identify error category: test failure, build error, permissions issue, etc.
+  - Based on analysis, take the necessary **corrective actions** (e.g., update code, fix config, adjust tests).
+  - Once resolved:
+    - Create a **new commit or re-push** to the relevant branch to trigger a new CI run.
+
+#### 3. Deployment Trigger & Monitoring
+- After CI passes, **Heroku auto-deployment** is triggered via GitHub-Heroku integration.
+- Agent should confirm the deployment was initiated from the GitHub Actions logs or Heroku Activity tab.
+
+#### 4. Accessing Heroku Logs (Digital Clipboard Team Setup)
+
+> 💡 We use Heroku under the **Digital Clipboard Team**, not personal Heroku accounts.
+
+To access logs:
+```bash
+heroku logs --tail --app <app-name>
+```
+
+- Replace `<app-name>` with the correct Heroku app (e.g., `digital-clipboard-staging` or `digital-clipboard-prod`).
+- Requires `heroku login` and correct team membership.
+- Logs are also accessible in the Heroku dashboard under **Activity > View Logs**.
+
+> ✅ Confirm application starts up correctly, dynos are running, and there are no errors.
+> ❌ If issues are found:
+> - Identify the **source of the error** from logs: buildpack failure, missing config, crash on startup, etc.
+> - Take **corrective action**: fix environment variables, add missing files, resolve startup errors.
+
+Once resolved, re-push to `staging` or `main` to retry deployment.
+
+---
+
+### 🧠 Agent Summary Table
+
+| Event              | Agent Action                                                                 |
+|-------------------|------------------------------------------------------------------------------|
+| Push to GitHub    | Start monitoring GitHub Actions                                               |
+| CI fails          | Analyze cause, take corrective action, trigger re-push                        |
+| CI passes         | Monitor Heroku deploy trigger                                                 |
+| Heroku deploy     | Access logs via `heroku logs --tail --app <app-name>`                         |
+| Deployment fails  | Identify error, resolve issue, retry deployment                              |
+| Deployment succeeds | Confirm service is running as expected                                      |

@@ -1,0 +1,142 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# Digital Clipboard Tone of Voice Guidelines
+
+## Overview
+
+This document outlines the tone of voice to be used across all Digital Clipboard client communications. Based on analysis of previous successful client interactions, we've defined a consistent, professional yet approachable style that reflects our brand values and resonates with our target audience of financial professionals.
+
+## Core Tone Attributes
+
+### 1. Professional & Authoritative
+- **Do:** Demonstrate expertise and knowledge of the financial services industry
+- **Don't:** Use jargon unnecessarily or adopt an overly academic tone
+- **Example:** "We've applied industry-standard ITIL procedures to streamline the approval process" vs. "We did some stuff to make approvals faster"
+
+### 2. Warm & Personable
+- **Do:** Address clients by name and reference specific details about their situation
+- **Don't:** Be overly formal or distant
+- **Example:** "Hi Jessie, I saw you attended our webinar in January. Did you find the DAR demonstration helpful?" vs. "Dear client, thank you for your attendance at our recent event."
+
+### 3. Concise & Direct
+- **Do:** Get to the point quickly and organize information logically
+- **Don't:** Use unnecessary preambles or meandering explanations
+- **Example:** "We're experiencing email service disruption. Estimated fix: 2 hours" vs. "We wanted to let you know that there appears to be an issue with our email service, which we're currently looking into and hope to have resolved in approximately 2 hours or so."
+
+### 4. Solution-Oriented
+- **Do:** Focus on solutions, next steps, and positive outcomes
+- **Don't:** Dwell on problems without offering clear paths forward
+- **Example:** "We've identified the cause and are implementing a fix. In the meantime, here's an alternative approach..." vs. "Unfortunately, there's an issue that's preventing the system from working correctly."
+
+### 5. Data-Backed & Specific
+- **Do:** Use specific numbers, metrics, and examples to illustrate points
+- **Don't:** Make vague claims without supporting evidence
+- **Example:** "This approach reduces process time by 40% (from 150 minutes to 90 minutes per case)" vs. "This approach saves a lot of time"
+
+## Communication Types & Specific Guidance
+
+### Sales & Proposals
+- Begin with a personal connection point
+- Highlight specific benefits using concrete numbers and percentages
+- Structure with clear headings and bullet points
+- Include clear next steps and calls to action
+- Use value-oriented language that emphasizes ROI and efficiency gains
+
+### Technical Support
+- Acknowledge the issue promptly and with empathy
+- Clearly explain technical issues in accessible language
+- Provide timeframes for resolution when possible
+- Offer workarounds when available
+- Close with next steps and how to follow up if needed
+
+### Product Updates
+- Lead with the most impactful changes
+- Explain the benefit of each feature, not just its functionality
+- Use bullet points for easy scanning
+- Include links to more detailed resources
+- Acknowledge any temporary disruptions honestly
+
+### Internal Stakeholder Communications
+- Be direct and factual about challenges
+- Maintain professionalism even in disagreements
+- Clearly articulate business impact
+- Reference shared goals and mutual benefits
+- Suggest specific, actionable solutions
+
+## Language & Formatting Guidelines
+
+### Vocabulary Preferences
+- **Preferred Terms:** platform, solution, enhance, streamline, optimize, efficiency
+- **Avoid:** product, tool, fix, make better, speed up
+
+### Email Structure
+- Begin with a personalized greeting
+- Start with the most important information
+- Use short paragraphs (3-4 sentences maximum)
+- Employ bullet points for lists longer than 3 items
+- End with a clear call to action or next step
+
+### Formatting Best Practices
+- Use headers for different sections
+- Bold key points or action items
+- Keep paragraphs short and focused
+- Use numbered lists for sequential steps
+- Include white space for readability
+
+## Brand Voice Examples
+
+### ✅ Good Example (Product Update)
+```
+Hi Jamie,
+
+Digital Annual Reviews (DAR) is now available for all practice members. This release delivers:
+
+• 40% reduction in review preparation time
+• Seamless Salesforce integration for client data
+• Customizable review templates that maintain compliance
+
+Your current plan includes 5 advice records/month, which can be used for Pre-Meet or DAR at no additional cost.
+
+Would a 15-minute walkthrough be helpful? I've added some available times below.
+
+Best,
+John
+```
+
+### ❌ Poor Example (Product Update)
+```
+Dear Customer,
+
+We are pleased to announce that we have updated our software with a new feature. The Digital Annual Reviews feature is quite good and has many benefits for users who want to save time.
+
+Please let us know if you want to use it.
+
+Regards,
+Digital Clipboard Team
+```
+
+## Adapting Tone for Different Audiences
+
+### C-Suite & Decision Makers
+- Focus on business outcomes, ROI, and strategic advantage
+- Be exceptionally concise and direct
+- Use industry benchmarks and competitive comparisons
+
+### Technical Implementers
+- Provide more technical detail and specific parameters
+- Reference industry standards and best practices
+- Include specific implementation steps and requirements
+
+### Day-to-Day Users
+- Emphasize practical benefits and time savings
+- Use clear, step-by-step instructions
+- Provide examples relevant to their daily workflows
+
+## Final Notes
+
+This tone of voice guide should be used as a foundation for all client communications. While flexibility is encouraged to address specific client needs, maintaining consistency in our core tone attributes helps build brand recognition and trust.
+
+Our communications should always reflect our company values: expertise, efficiency, technological innovation, and client success.

@@ -1,0 +1,61 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+ ---
+description: Standardized strategy for integrating Dependabot updates via a temporary staging branch.
+globs:
+  - '.github/workflows/*dependabot*.yml' # Optional: Apply when relevant workflow files are open
+alwaysApply: true
+---
+
+# Dependabot Integration Strategy via Staging Branch
+
+This document outlines the standardized process for managing and integrating Dependabot pull requests targeting the `staging` branch to ensure updates are tested together before final merge.
+
+## Core Workflow
+
+1.  **Trigger:**
+    *   The integration process is typically triggered on a regular schedule (e.g., daily).
+    *   It can also be initiated manually via `workflow_dispatch`.
+
+2.  **Branch Creation:**
+    *   A new, temporary integration branch (e.g., `dependabot-integration-TIMESTAMP`) is created based on the latest commit of the `staging` branch.
+
+3.  **PR Identification & Merging:**
+    *   The workflow identifies all open pull requests created by Dependabot (typically labeled `dependencies`) that target the `staging` branch.
+    *   It attempts to merge each identified PR sequentially into the temporary integration branch using a `--no-ff` strategy.
+
+4.  **Conflict Handling:**
+    *   If a PR merges cleanly, it's added to a list of successfully integrated PRs.
+    *   If a merge conflict occurs:
+        *   The merge attempt for that specific PR is aborted (`git merge --abort`).
+        *   The PR is marked as conflicted.
+        *   A comment is automatically added to the conflicted PR notifying maintainers that manual resolution against `staging` is required.
+        *   The workflow continues to the next PR.
+
+5.  **Testing:**
+    *   If one or more PRs were successfully merged into the integration branch, the branch is pushed to the remote repository.
+    *   The project's standard test suite (unit tests, integration tests, etc.) is executed against this integration branch.
+
+6.  **Merge to Staging (on Test Success):**
+    *   If the test suite passes on the integration branch:
+        *   The integration branch is merged into the `staging` branch (using `--no-ff`).
+        *   The original Dependabot PRs that were successfully included in the integration branch are automatically closed with a comment indicating their successful merge via the integration process.
+        *   *Optional:* The source branches for the closed Dependabot PRs can be deleted.
+
+7.  **Handling Test Failure:**
+    *   If the test suite fails on the integration branch:
+        *   The integration branch is **not** merged into `staging`.
+        *   A notification (e.g., a log message, potentially a created issue or Slack notification) is generated indicating the failure, allowing maintainers to investigate the compatibility issues between the merged dependencies.
+
+8.  **Cleanup:**
+    *   Regardless of success or failure (as long as the integration branch was pushed), the temporary remote integration branch is deleted to keep the repository clean.
+
+## Implementation Notes
+
+*   This process relies on the GitHub CLI (`gh`) being available in the runner environment.
+*   Requires appropriate `permissions` in the GitHub Actions workflow (`contents: write`, `pull-requests: write`).
+*   The specific test commands must be configured correctly within the workflow file.
+*   Assumes Dependabot PRs are consistently labeled (e.g., `dependencies`) for identification.

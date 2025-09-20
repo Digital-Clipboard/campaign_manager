@@ -1,0 +1,76 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+ ---
+description: Contributing Guidelines for AI Assistants
+globs:
+alwaysApply: true
+---
+# Contributing Guidelines for AI Assistants
+
+contributing: When contributing to this project, follow these guidelines for code style, complexity management, pull requests, and testing. Keep methods small (under 50 lines) and focused with a single responsibility. Break complex methods into smaller helper functions. Use composition over inheritance. Follow PEP 8 and use the project's formatting and linting tools (ruff, black), primarily enforced via pre-commit hooks. Handle code complexity by extracting utility functions, reducing conditional nesting, and applying appropriate design patterns. Ensure comprehensive test coverage with pytest. Structure commit messages according to the specified format (<type>(<scope>): <summary>). When suggesting changes to complex methods, explain how refactoring improves maintainability. Always check the codebase for existing solutions before proposing new code. Document all public functions with Google-style docstrings and include type hints.
+
+## Code Style and Complexity
+
+When generating code:
+- Keep methods under 50 lines with a single responsibility
+- Use type annotations consistently
+- Follow PEP 8 and project linting rules
+- Break complex logic into smaller, focused helper methods
+- Use descriptive variable and function names
+- Prefer composition over inheritance
+- Document all public functions with Google-style docstrings
+- Extract repeated patterns into utility functions
+- Reduce conditional nesting when possible
+
+## When Refactoring Complex Code
+
+The repository has complexity warnings in specific files that require careful refactoring:
+- `github_agent/analytics/pull_request.py`
+- `github_agent/analytics/contributor.py`
+
+When suggesting refactoring for complex methods:
+1. Extract helper methods for specific logic segments
+2. Consider using base classes for common functionality
+3. Apply the strategy pattern for different analysis types
+4. Explain how the refactoring improves maintainability
+5. Consider performance implications
+
+## Testing Requirements
+
+For all code generation:
+- Ensure functionality can be tested with pytest
+- Consider edge cases in the implementation
+- Suggest appropriate test cases for new functionality
+- Maintain existing test patterns for consistency
+
+## Pull Request Guidelines
+
+When suggesting code for a potential pull request:
+- Explain how changes align with project goals
+- Note any performance considerations
+- Highlight maintainability improvements
+- Structure code to make reviewing easier
+
+## Commit Message Format
+
+Format commit messages according to the project standard:
+```
+<type>(<scope>): <short summary>
+
+<optional detailed description>
+
+<optional footer>
+```
+
+Types include: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert
+
+## Reusing Existing Code
+
+Before suggesting new implementations:
+- Search for similar functionality in the codebase
+- Consider adapting existing solutions
+- Evaluate whether to reuse, refactor, or create new code
+- Avoid introducing redundant functionality

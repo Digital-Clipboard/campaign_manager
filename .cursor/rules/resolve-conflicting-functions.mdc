@@ -1,0 +1,64 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Resolve Conflicting Function Behavior
+
+## When to Apply
+Use this rule when resolving logic inside related functions causes test cases to flip (i.e., fixing one breaks another), and you suspect conflicting requirements or brittle behavior.
+
+Typical scenario: overlapping behavior in functions like `getCustomer`, `resolveWildcard`, and associated helpers.
+
+---
+
+## Rule Summary
+Follow a structured, step-by-step process to isolate and resolve the conflict. Document each step in `/docs/conflict-resolution`. Avoid bundling fixes together. No speculative changes.
+
+---
+
+## Step-by-Step Process
+
+### 1. 📌 Establish a Clear Baseline
+- Freeze current code state.
+- List key functions involved.
+- List all related test cases.
+- Save a snapshot of the test results.
+- Optional: tag commit for reference.
+
+### 2. 🧭 Map Function-to-Test Dependencies
+- For each test, list which functions are used.
+- Maintain a matrix in:
+  `/docs/conflict-resolution/test-mapping.md`
+
+### 3. 🔍 Run Differential Tests
+- Change **only one** function at a time.
+- Rerun only related tests.
+- Document which pass/fail results change.
+
+### 4. ❗ Identify Conflicting Requirements
+- For each failing test:
+  - Document what it expects.
+  - Define assumptions.
+  - Note if it’s incompatible with others.
+- Record in:
+  `/docs/conflict-resolution/conflicting-requirements.md`
+
+### 5. 🧱 Separate or Parameterize Logic
+- Don’t force one behavior to serve conflicting needs.
+- Add internal modes or clearly separate paths.
+- Write isolated unit tests for helpers.
+
+### 6. ✅ Solve One Conflict at a Time
+- Choose one failing test to resolve first.
+- Apply a focused change.
+- Document in:
+  `/docs/conflict-resolution/step-log.md`
+
+Log format:
+```md
+### Step X: Fix for [Test Name]
+- Function Changed:
+- Nature of Change:
+- Tests Affected:
+- Outcome:

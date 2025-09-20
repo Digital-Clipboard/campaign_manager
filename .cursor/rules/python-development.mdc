@@ -1,0 +1,134 @@
+---
+description: AI Assistant Specializing in Python Development
+globs:
+alwaysApply: true
+---
+# AI Assistant Specializing in Python Development
+
+## Purpose
+Provide detailed, AI-friendly Python development rules that ensure clarity, maintainability, and consistency while incorporating best practices for environment management, testing, version control, and performance.
+
+## 1. Project Structure & File Placement
+- **Root Directory Restrictions:**
+  - Keep the root directory clean and minimal
+  - Only place these files in the root directory:
+    - `README.md`, `LICENSE`, `CHANGELOG.md`, `CONTRIBUTING.md`, `SECURITY.md`
+    - `pyproject.toml`, `setup.py`, `setup.cfg`, `requirements.txt`
+    - `.gitignore`, `.pre-commit-config.yaml`
+    - Simple docker-related files (`Dockerfile`, `docker-compose.yml`)
+    - CI configuration (`.github/workflows/`)
+  - Never place these in root:
+    - Scripts (✓ place in `scripts/` directory)
+    - Test files (✓ place in `tests/` directory)
+    - Example files (✓ place in `examples/` directory)
+    - Documentation beyond the main README (✓ place in `docs/`)
+    - Application code (✓ place in `app/` or appropriate module)
+
+- **Directory Structure:** Use this organization:
+  - `app/` - Core application code with submodules:
+    - `app/api/` - API endpoints and routing
+    - `app/models/` - Data models
+    - `app/services/` - Business logic
+    - `app/utils/` - Utility functions
+    - `app/config/` - Application configuration
+  - `tests/` - All test files, mirroring the app structure:
+    - `tests/unit/` - Unit tests
+    - `tests/integration/` - Integration tests
+  - `scripts/` - Categorized utility scripts:
+    - `scripts/maintenance/` - Maintenance scripts
+    - `scripts/utils/` - Utility scripts
+    - `scripts/data/` - Data processing scripts
+  - `config/` - Configuration files:
+    - Environment files (`.env.example`, `.env.staging`, `.env.production`)
+    - Database configs, etc.
+  - `docs/` - Documentation:
+    - `docs/guides/` - User & developer guides
+    - `docs/api/` - API documentation
+    - `docs/notes/` - Development notes
+  - `data/` - Data files:
+    - `data/exports/` - Exported data
+    - `data/imports/` - Import data
+    - `data/fixtures/` - Test fixtures
+  - `logs/` - Log files (if not handled by external services)
+
+- **Modular Design:**
+  - Each module should be self-contained with clear responsibilities
+  - Use __init__.py files in each directory to make imports cleaner
+  - Create dedicated folders for related functionality
+
+## 2. Environment & Configuration Management
+- **Virtual Environments:** Use tools like `venv` to isolate project dependencies.
+- **Dependency Management:**
+  - Pin package versions in `pyproject.toml`.
+  - Regularly scan for vulnerable dependencies (handled via pre-commit hooks using tools like safety).
+- **Configuration Files:**
+  - Store all environment files in the `config/` directory
+  - Use environment-specific files (e.g., `config/.env.staging`, `config/.env.production`).
+  - Maintain a central configuration file (e.g., `app/config/settings.py`).
+
+## 3. Coding Style & AI-Friendly Practices
+- **Formatting & Linting:**
+  - Adhere to PEP 8.
+  - Use automated tools such as **black** for formatting and **ruff** for linting and import sorting.
+- **Naming Conventions:**
+  - Name modules, classes, and functions clearly to reflect their purpose.
+- **Code Snippets:**
+  - Provide clear, concise examples and explanations optimized for AI-assisted development.
+
+## 4. Type Annotations and Documentation
+- **Typing:**
+  - Add typing annotations to every function and class.
+  - Include explicit return types where necessary.
+- **Docstrings:**
+  - Use the Google Style Docstrings convention for all public functions, classes, and modules.
+  - Include usage examples, parameter descriptions, and return values.
+- **Comments:**
+  - Retain all existing comments to preserve context and clarity.
+
+## 5. Logging, Debugging, and Error Handling
+- **Custom Logger:**
+  - Use a dedicated logger (e.g., located at `app/utils/setup_logger.py`) configured with levels (DEBUG, INFO, WARNING, ERROR, CRITICAL).
+- **Logging Configuration:**
+  - Optionally use a dedicated settings file (e.g., `logging.conf`) for logging setup.
+  - Avoid using print statements for production debugging.
+- **Error Handling:**
+  - Raise specific, meaningful exceptions.
+  - Log exceptions instead of silently discarding them.
+  - Implement custom exceptions for domain-specific error handling as needed.
+
+## 6. Testing and CI/CD
+- **Testing Framework:**
+  - Write all tests using **pytest** (avoid unittest).
+  - Place tests in a dedicated `tests` directory, ensuring an `__init__.py` exists if needed.
+  - Match test directory structure to application structure (e.g., `tests/unit/services/` for testing code in `app/services/`).
+- **Test Details:**
+  - All test functions and modules should include full typing annotations and descriptive docstrings.
+  - When using `TYPE_CHECKING`, import common pytest fixtures:
+    ```python
+    from _pytest.capture import CaptureFixture
+    from _pytest.fixtures import FixtureRequest
+    from _pytest.logging import LogCaptureFixture
+    from _pytest.monkeypatch import MonkeyPatch
+    from pytest_mock.plugin import MockerFixture
+    ```
+- **CI/CD:**
+  - Integrate tests and coverage checks via GitHub Actions.
+  - Ensure that all automated lint, test, and coverage checks pass before merging.
+
+## 7. Performance and Dependency Evaluation
+- **Performance Optimization:**
+  - Use profiling tools (e.g., cProfile) to identify bottlenecks.
+  - Optimize only after profiling confirms performance issues.
+  - Consider caching or memoization for expensive operations.
+- **Introducing New Dependencies:**
+  - Evaluate new libraries for licensing, security, and compatibility.
+  - Confirm that standard libraries or existing solutions cannot meet the need before adding new dependencies.
+
+## 8. Version Control and Code Review
+- **Branching & Commits:**
+  - Use feature branches with meaningful commit messages (e.g., following Conventional Commits).
+- **Pull Requests:**
+  - Submit PRs for review with automated tests and coverage checks in place.
+- **Final Checklist:**
+  - Verify that docstrings, annotations, linting, and tests are up to date.
+  - Confirm that all environmental, performance, and dependency guidelines are followed.

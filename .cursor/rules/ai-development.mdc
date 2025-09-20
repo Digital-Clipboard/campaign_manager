@@ -1,0 +1,196 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# Custom Development Lifecycle (CDL)
+
+This document outlines the Custom Development Lifecycle (CDL), a structured, phase-based methodology to guide software development projects, from initial concept through to completion. It emphasizes detailed planning, test-driven development, and comprehensive progress tracking.
+
+**Note:** Replace `<project_name>` with the specific project identifier and `vX.Y` with the appropriate version number throughout this process.
+
+---
+
+## Phase 1: Conceptualization & High-Level Design
+
+This phase focuses on understanding the project goals, defining the initial scope, and outlining the technical approach and testing strategy.
+
+1.  **Initiation & Project-Level Brainstorming:**
+    *   Engage in open dialogue with stakeholders (e.g., Product Owner, team members) to surface initial ideas, objectives, constraints, and high-level project needs for the overall project.
+    *   Log all ideas, discussions, and initial requirements in `docs/source/notes/<project_name>/brainstorming_v0.1.md`. This covers your need for "brainstorming notes."
+
+2.  **Identification & Conceptualization of Complex Sub-Workflows:**
+    *   During or following the initial project-level brainstorming, identify any components, features, or modules that represent complex "sub-workflows" requiring their own focused conceptualization early on.
+    *   For each identified sub-workflow:
+        *   **Sub-Workflow Brainstorming:** Log detailed notes specifically for this sub-workflow in `docs/source/notes/<project_name>/<sub_workflow_name>/brainstorming_v0.1.md`.
+        *   **Initial Sub-Workflow Specification Outline:** Create an initial outline or high-level specification for the sub-workflow. This can be a dedicated section within the main project's `brainstorming_v0.1.md`, or a new file like `docs/source/specs/<project_name>/<sub_workflow_name>/draft_specification_outline_v0.1.md`. The goal is to capture core requirements and scope.
+        *   **Initial Sub-Workflow Test Case Ideas:** Document preliminary test case ideas or key validation points for the sub-workflow. This can also be part of its brainstorming document or a separate note, e.g., `docs/source/specs/<project_name>/<sub_workflow_name>/draft_test_ideas_v0.1.md`.
+    *   These initial sub-workflow artifacts are crucial for informing the overall project's high-level design and subsequent detailed specifications.
+
+3.  **High-Level Architecture & Overall Project Structure Definition:**
+    *   Synthesize outputs from both project-level and sub-workflow brainstorming to identify core components, modules, their interactions, and the intended overall project layout. Consider how sub-workflows integrate into the larger system.
+    *   Develop a high-level architecture diagram and define the target project structure.
+    *   **Deliverables:**
+        *   An ASCII art representation of the high-level architecture should be created and stored in `docs/source/architecture/<project_name>/high_level_architecture_v0.1.txt` or embedded directly within the initial specification document.
+        *   A representation of the target project structure (e.g., text-based diagram or descriptive list) should be created and stored in `docs/source/architecture/<project_name>/project_structure_v0.1.txt` or embedded within the initial specification document.
+
+4.  **Draft Overall Project Specification Development:**
+    *   Create a first-pass development specification for the entire project, incorporating insights and requirements from any conceptualized sub-workflows.
+    *   **Deliverable:** `docs/source/specs/<project_name>/draft_specification_v0.1.md`.
+    *   This document should outline:
+        *   **Objectives:** What the project aims to achieve.
+        *   **Requirements:** Functional and non-functional requirements (including summaries or links to sub-workflow specification outlines).
+        *   **Assumptions & Constraints:** Any underlying assumptions or limitations.
+        *   **Dependencies:** External or internal dependencies.
+    *   This covers your "specification" requirement.
+
+5.  **Detailed Overall Project Test Specification Development:**
+    *   In line with a test-driven development approach, create a detailed test specification for the entire project, including test strategies for conceptualized sub-workflows.
+    *   **Deliverable:** `docs/source/specs/<project_name>/draft_test_specification_v0.1.md`.
+    *   This document must include:
+        *   Key features and functionalities to be tested (overall project and sub-workflows).
+        *   Types of tests to be performed (e.g., unit, integration, end-to-end, performance, security).
+        *   High-level test cases and scenarios (informed by sub-workflow test ideas).
+        *   Specific acceptance criteria for each requirement from a testing perspective.
+        *   Tools, frameworks, and environments to be used for testing.
+    *   This directly addresses your need for "detailed test specifications" to ensure a "test-driven way."
+
+---
+
+## Phase 2: Specification & Test Plan Refinement
+
+This phase ensures clarity, completeness, and alignment on what will be built and how it will be validated.
+
+1.  **Clarity Review:**
+    *   Thoroughly review the `draft_specification_vX.Y.md` and the `draft_test_specification_vX.Y.md`.
+    *   Tag any ambiguous, overlapping, or conflicting sections with `@clarify` for discussion and resolution.
+
+2.  **Iteration & Feedback Integration:**
+    *   Address all `@clarify` tags by providing details, refining requirements, or making explicit decisions.
+    *   Merge feedback into the draft specification and draft test specification documents, incrementing their versions (e.g., `v0.2`).
+    *   Repeat the clarity review process until no outstanding `@clarify` tags remain.
+
+3.  **Finalization:**
+    *   The finalized, agreed-upon specification is saved to `docs/source/specs/<project_name>/specification_vX.Y.md`.
+    *   The finalized, agreed-upon test specification is saved to `docs/source/specs/<project_name>/test_specification_vX.Y.md`.
+    *   Ensure that each acceptance criterion in the main specification is explicitly covered by corresponding test cases or scenarios in the test specification.
+    *   Archive outdated draft versions (e.g., move to an `archive/` subfolder within the project's spec directory).
+
+---
+
+## Phase 3: Project Structuring & Detailed Planning
+
+This phase involves breaking down the fully conceptualized project (including its sub-workflows) into manageable parts for execution, and finalizing detailed plans.
+
+1.  **Scope Refinement & Milestone/Detailed Workflow Breakdown:**
+    *   Review the finalized overall project specification (`specification_vX.Y.md`) and test specification (`test_specification_vX.Y.md`), which now incorporate the conceptual work done on sub-workflows in Phase 1 and refined in Phase 2.
+    *   Decompose the finalized specifications into discrete milestones or detailed workflows. This includes further detailing or confirming the specifications and test cases for previously identified sub-workflows.
+    *   Ensure that if sub-workflow specifications or test cases were initially created as separate outline/idea documents, they are now either fully integrated into the main project specification/test specification documents or matured into their own complete `specification_vX.Y.md` and `test_cases_vX.Y.md` (e.g., `docs/source/specs/<project_name>/<sub_workflow_name>/specification_v1.0.md`).
+    *   Optionally create or update separate scope or milestone documents:
+        *   `docs/source/specs/<project_name>/scope_vX.Y.md`
+        *   `docs/source/specs/<project_name>/milestones_vX.Y.md`
+    *   Each milestone/detailed workflow should clearly define:
+        *   **Deliverables.**
+        *   **Acceptance Criteria** (linked from the main/sub-workflow specification).
+        *   **Relevant Test Cases** (linked from the main/sub-workflow test specification/cases).
+        *   **Estimated Effort & Timeline.**
+
+2.  **Effort Estimation & Timeline:**
+    *   Estimate effort for each milestone and detailed (sub-)workflow.
+    *   Develop or refine the project timeline, assigning target dates or offsets.
+    *   Represent this schedule in `milestones_vX.Y.md` or within the main specification.
+
+3.  **Sign-Off Process:**
+    *   Stakeholders (e.g., Product Owner, technical lead) review the complete and detailed project plan (final specifications for project and sub-workflows, final test plans, scope, milestones, timeline).
+    *   Once approved, record the approval date and version in the relevant document(s).
+    *   **At this stage, the project is formally "ready for development."**
+
+---
+
+## Phase 4: Iterative Development & Testing
+
+This phase focuses on building the software in iterative cycles, adhering to the test-driven approach, and tracking progress meticulously.
+
+1.  **Branching Strategy:**
+    *   Before starting execution, create a dedicated feature branch for the project based on the target integration branch (e.g., `staging` or `main`). Use a descriptive name (e.g., `feat/<project_name>`). All work for this project will occur on this branch.
+
+2.  **Milestone/Sub-Workflow Execution:**
+    *   Complete development tasks for the *current* milestone or sub-workflow as defined in the specification(s).
+    *   **Implementation Notes:** Log detailed progress, technical decisions, challenges encountered, code structure insights, and any deviations or necessary context in `docs/source/notes/<project_name>/progress/<milestone_or_workflow_name>/implementation_log_vX.Y.md`. This covers your "implementation notes" requirement.
+
+3.  **Test Execution & Verification:**
+    *   Continuously write and execute tests (unit, integration, etc.) as defined in the `test_specification_vX.Y.md` and specific sub-workflow test case documents.
+    *   **Testing Notes:** Log all testing activities, including test results, bugs discovered (with steps to reproduce), fixes applied, and test coverage achieved in `docs/source/notes/<project_name>/progress/<milestone_or_workflow_name>/testing_log_vX.Y.md`. This covers your "testing notes" requirement.
+    *   Any unmet acceptance criteria or test failures trigger internal iteration *within the scope of the current milestone/sub-workflow*.
+
+4.  **Stakeholder Review & Refinement:**
+    *   Present the milestone/sub-workflow deliverable (completed code, passing tests, updated documentation) for stakeholder review.
+    *   Stakeholders approve or provide feedback for refinement *within the scope of the current deliverable*.
+    *   Incorporate feedback and re-submit for review until approval is granted.
+
+5.  **Milestone Commit & Push:**
+    *   Upon stakeholder approval for the milestone/sub-workflow:
+        *   Stage all relevant changes (`git add .`).
+        *   Create a single, detailed commit message summarizing the work completed (e.g., adhering to Conventional Commits).
+        *   Push the commit to the remote feature branch.
+    *   Record the approved milestone completion (with links to commits/artifacts if helpful) in `docs/source/notes/<project_name>/releases/release_notes_milestone_N.md`.
+
+6.  **Iteration:** Repeat steps 2-5 for each subsequent milestone/sub-workflow.
+
+---
+
+## Phase 5: Scope Management & Change Control
+
+Effective management of scope and changes is crucial for project success.
+
+1.  **Scope Guardrails:**
+    *   Work must not be performed outside the agreed scope defined in the finalized specification (`specification_vX.Y.md`) and scope/milestone documents.
+    *   New requests or ideas identified during execution that fall outside the current scope automatically generate a `CHANGE_REQUEST` entry in `docs/source/notes/<project_name>/change_log.md`.
+
+2.  **Change Request Workflow:**
+    *   The requester logs: description, impact analysis (effort, timeline, dependencies), and affected milestones in `docs/source/notes/<project_name>/change_log.md`.
+    *   Manager/stakeholder approval is required before integrating the change into the project plan and execution.
+
+3.  **Versioning:**
+    *   Upon approval of a significant change request, increment the specification version (e.g., `specification_v1.1.md`, `test_specification_v1.1.md`) and update affected milestones/scope documents accordingly.
+
+---
+
+## Phase 6: Project Completion & Retrospective
+
+This phase finalizes the project and captures lessons learned for future improvements.
+
+1.  **Final Integration & Pull Request:**
+    *   Once all milestones are complete and pushed to the feature branch:
+        *   Ensure the feature branch is up-to-date with the target integration branch. Resolve any merge conflicts.
+        *   Create a Pull Request (PR) from the feature branch to the target branch.
+        *   The PR description should summarize project objectives, link to key specifications, and provide a high-level overview of changes.
+
+2.  **Merge & Deployment:**
+    *   Upon PR approval and successful CI checks, merge the feature branch.
+    *   Monitor deployment according to project standards.
+
+3.  **Final Summary:**
+    *   Compile `docs/source/notes/<project_name>/summary.md`, detailing: achievements vs. objectives, deviations & resolutions, links to key artifacts (spec, test spec, PRs), and lessons learned.
+
+4.  **Retrospective:**
+    *   Stakeholders review the project summary and lessons learned.
+    *   Record potential process improvements in `docs/source/notes/<project_name>/retrospective.md`.
+
+5.  **Archive & Cleanup:**
+    *   Mark the project as `completed`.
+    *   Clean up the feature branch after successful merge and deployment verification.
+    *   Consider archiving project-specific `docs/source/notes/<project_name>/` and `docs/source/specs/<project_name>/` folders if desired.
+
+---
+
+## Best Practices & Additional Rules
+
+*   **Generic Templates**: Use markdown templates adaptable to various project types.
+*   **Version Control**: Maintain all documentation in Git; require PR reviews for major changes to this lifecycle document itself.
+*   **Transparency**: Log decisions, timestamps, and assumptions meticulously in the designated note files.
+*   **Tooling**: Leverage project management and CI/CD tools to support this lifecycle.
+
+---
+
+*End of Custom Development Lifecycle*

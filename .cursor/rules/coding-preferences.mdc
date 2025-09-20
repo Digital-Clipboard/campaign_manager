@@ -1,0 +1,46 @@
+---
+description: My coding preferences.
+globs:
+alwaysApply: true
+---
+# AI Coding Pattern Preferences
+
+These coding pattern preferences are designed specifically for AI-assisted development, ensuring code is modular, maintainable, and easily adaptable while adhering to best practices.
+
+1. **Emphasize Modularity and Reuse**
+   - Before writing new code, check existing modules or functions for available functionality.
+   - Decide whether to:
+     - **Reuse:** If the existing code closely matches the required functionality.
+     - **Refactor:** When small changes can generalize the code for broader usage.
+     - **Replicate:** Only if the existing solution cannot be adapted without major disruption.
+   - Consider factors such as time savings, code duplication, and future maintainability in your decision process.
+
+2. **Keep Functions and Classes Well-Contained**
+   - Aim for small, single-purpose functions or classes that adhere to the **Single Responsibility Principle**.
+   - Write clear documentation or comments explaining each function’s purpose, usage, and any edge cases.
+
+3. **Plan for Future Refactoring**
+   - When introducing new logic, anticipate that it might evolve into standard functionality or require replacement.
+   - Look for refactoring triggers, such as:
+     - Code smells or repeated patterns.
+     - Emerging performance issues.
+     - Redundant or overly complex implementations.
+   - Organize your code so it can be easily updated, removed, or consolidated into shared solutions.
+
+4. **Refactor Large Files**
+   - If a file exceeds practical limits (e.g., over 1,000 lines) or contains distinct logical sections, break it into smaller, focused modules.
+   - Base refactoring decisions on logical boundaries or feature domains rather than solely on file length to improve readability and testability.
+
+5. **Avoid Duplicates and Consider Environments**
+   - Always search the codebase for existing solutions to avoid duplicating functionality.
+   - Manage environment-specific code using configuration files or environment variables (e.g., for development, staging, production) to ensure consistency.
+   - When adapting proven production code, ensure that environment-specific adaptations are consistently maintained.
+
+6. **Introduce New Dependencies Cautiously**
+   - Never add a new import or library without consulting with the team or the AI guidelines.
+   - Evaluate new dependencies based on:
+     - **Security:** Verify the dependency meets security standards.
+     - **Licensing:** Ensure its licensing is compatible with the project.
+     - **Performance:** Assess the impact on performance.
+     - **Community and Maintenance:** Consider the level of community support and maintenance frequency.
+   - Confirm that standard libraries or existing solutions cannot meet the need before introducing new dependencies.

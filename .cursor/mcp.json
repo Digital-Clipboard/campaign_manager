@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "shortcuts-agent": {
+      "url": "https://shortcuts-agent-dcc81f0a4f31.herokuapp.com/mcp",
+      "headers": {
+        "X-API-Key": "a3e8e54f47daf2011efe9c17bbf7a085a54ad27cfd79afb4b230ae5f7f0fe2ed"
+      }
+    }
+  }
+}

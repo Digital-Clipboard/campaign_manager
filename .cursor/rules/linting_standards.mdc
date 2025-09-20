@@ -1,0 +1,102 @@
+---
+description: "Standardized linting configuration across all environments to ensure consistent code quality"
+globs:
+alwaysApply: false
+---
+
+# Linting Standards and Configuration
+
+## Overview
+
+This document defines the standardized linting configuration used throughout the codebase, ensuring consistency across all environments:
+- Local development (pre-commit hooks)
+- CI/CD pipelines (GitHub Actions)
+- Developer IDE settings
+
+## Configuration Files
+
+The following configuration files define our linting standards:
+
+1. **`.flake8`** - Central configuration for Flake8 linting rules
+2. **`.pre-commit-config.yaml`** - Pre-commit hook configuration
+3. **`.github/workflows/lint.yml`** - CI pipeline linting jobs
+
+## Key Standards
+
+Our Python code adheres to these linting standards:
+
+1. **Line Length**: Maximum 88 characters (Black's default)
+2. **Code Formatting**: Black with default settings
+3. **Import Sorting**: isort with Black compatibility profile
+4. **Code Quality**: Flake8 with selected rules (see below)
+5. **Docstrings**: Required for public functions/classes via flake8-docstrings
+
+## Flake8 Rules
+
+The core Flake8 configuration includes:
+
+```
+max-line-length = 88
+extend-ignore = E203, E266, E501, W503
+select = B,C,E,F,W,T4,B9
+```
+
+These settings:
+- Match Black's line length (88 chars)
+- Ignore rules that conflict with Black's formatting
+- Enable error categories for bugs (B), complexity (C), formatting (E), logical errors (F), style warnings (W), etc.
+
+## Environments and Enforcement
+
+| Environment | Tool | Configuration Source | When Enforced |
+|-------------|------|----------------------|---------------|
+| Local | pre-commit hooks | `.pre-commit-config.yaml` + `.flake8` | On git commit |
+| CI | GitHub Actions | `.github/workflows/lint.yml` + `.flake8` | On push to main/staging |
+| IDE | Editor plugins | `.flake8` | During development |
+
+## Handling Issues
+
+If you encounter linting errors:
+
+1. **Local**: Run `pre-commit run --all-files` to check entire codebase
+2. **Automatic fixes**: Run `black .` and `isort .` to auto-format code
+3. **Flake8 errors**: These require manual fixes (run `flake8` for details)
+
+## Rule Updates
+
+To modify these standards:
+
+1. Update the `.flake8` file (single source of truth)
+2. Ensure any changes are reflected in pre-commit and GitHub workflows
+3. Document the changes in this file with justification
+
+Remember: The goal of linting is to improve code quality and consistency, not to create unnecessary barriers.
+
+## Common Error Codes
+
+- **E/W**: PEP8 style errors/warnings
+- **F**: PyFlakes error (unused imports, etc.)
+- **C**: McCabe complexity
+- **B**: Bug-related checks from flake8-bugbear
+- **D**: Docstring-related checks from flake8-docstrings
+
+## Examples
+
+### F824 Error (common in this project)
+This error occurs when you use `global` keyword but never assign to the variable in that scope:
+
+```python
+# Wrong
+def my_function():
+    global some_var  # F824 if you only read some_var but never assign to it
+    print(some_var)
+
+# Correct - only use global when assigning to the variable
+def my_function():
+    # No global needed here
+    print(some_var)
+
+def my_function_with_assignment():
+    global some_var  # Now appropriate as we're assigning to it
+    some_var = 42
+```

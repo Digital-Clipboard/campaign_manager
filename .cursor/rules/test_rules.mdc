@@ -1,0 +1,121 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+---
+description: General Testing Rules for Software Integrity
+globs: *
+alwaysApply: true
+---
+# Test Rules for Software Integrity
+
+This document outlines strict rules for testing software to ensure logical correctness, prevent hard-coded shortcuts, and enforce transparency. These rules are designed to prevent AI-generated or manually written code from bypassing the intended logic.
+
+---
+
+## 1. Rule Against Overfitting or Shortcut Logic
+
+**Test Rule:** The implementation must not hard-code specific outputs to pass known test cases.
+**Implementation:**
+- Prohibit patterns like `if (input == X) return Y`.
+- Run static analysis or regex checks to detect magic values or conditionals tied to specific inputs.
+- Require all constant values to come from a centralized, declared configuration file, with proper references.
+
+---
+
+## 2. Rule for Comprehensive Input Coverage
+
+**Test Rule:** The test suite must cover a full range of cases: static, edge, and randomized.
+**Implementation:**
+- Maintain a matrix of tests for:
+  - Authoritative static inputs (from specifications or requirements).
+  - Dynamic random values (including fuzzing across ranges).
+  - Edge boundaries (e.g., just below/above thresholds).
+- Implement boundary tests around all decision thresholds.
+- Use differential testing against legacy or reference implementations to catch regression or divergence.
+
+---
+
+## 3. Rule for Transparency of Computation
+
+**Test Rule:** Each computation must be traceable and explainable step-by-step.
+**Implementation:**
+- Implement an optional `debug_mode=True` or `--explain` flag to expose:
+  - Input breakdown
+  - Business rules applied
+  - Intermediate calculations
+- Write unit tests for each individual component alongside total output tests.
+- Include inline comments or docstrings explaining each logic block, aligned to specific requirements.
+
+---
+
+## 4. Rule for Immutable Test Data
+
+**Test Rule:** Authoritative test data must not be modifiable at runtime.
+**Implementation:**
+- Store test data in a secure, read-only location outside of business logic.
+- Optionally apply cryptographic checksums to test data files in CI to detect tampering.
+
+---
+
+## 5. Rule for Failing Fast
+
+**Test Rule:** Any mismatch with expected output must fail immediately.
+**Implementation:**
+- Use strict equality for deterministic values.
+- Apply tolerance thresholds only when documented and required (e.g., floating-point comparisons).
+- Require assertion failures to include contextual messages showing mismatched values and their sources.
+- Enable `STRICT_MODE` that fails on any missing output keys or null values in results.
+
+---
+
+## 6. Rule for Explainability Before Execution
+
+**Test Rule:** All complex logic must be preceded by an English explanation.
+**Implementation:**
+- Every core function must begin with a structured `"""Explain logic"""` docstring or block comment.
+- Explanations must include:
+  - Applicable contexts or versions
+  - Thresholds or boundaries used
+  - Exceptions handled
+- Optionally validate that logic in the docstring maps to code branches for traceability.
+
+---
+
+## 7. Rule for Hidden Case Rotation
+
+**Test Rule:** AI-generated code must be validated against hidden test cases not present in prompt or training.
+**Implementation:**
+- Maintain a shadow test suite that is not visible to the AI at generation time.
+- Periodically rotate hidden test cases to prevent overfitting.
+- Run these tests in CI to detect attempts to "cheat" or hard-code known values.
+
+---
+
+## 8. Rule for Requirement Anchoring
+
+**Test Rule:** All threshold logic must link to a verifiable source requirement.
+**Implementation:**
+- Require inline comments or metadata annotations with the source (e.g., URL, document section).
+- Store all reference documents in `/docs/requirements/` or similar.
+- Use this mapping for automated changelog generation and version comparisons.
+
+---
+
+## Summary
+
+| Rule | Purpose |
+|------|---------|
+| Rule 1 | Prevent hard-coding / overfitting |
+| Rule 2 | Enforce broad and deep input testing |
+| Rule 3 | Ensure transparency and traceability |
+| Rule 4 | Lock test data from manipulation |
+| Rule 5 | Fail clearly and immediately on mismatch |
+| Rule 6 | Explain logic before implementing it |
+| Rule 7 | Catch AI cheating with hidden tests |
+| Rule 8 | Anchor logic to source requirements |
+
+---
+
+Note: These rules are mandatory for all updates to the codebase. Violations must be addressed before merging code to production.

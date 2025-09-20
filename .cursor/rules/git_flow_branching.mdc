@@ -1,0 +1,55 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+---
+description: Enforces the standard Git Flow branching strategy for this repository.
+globs: [] # Apply globally or specify relevant globs if needed
+alwaysApply: true # Usually true for process rules
+---
+
+# Branching Strategy (Git Flow Variant)
+
+**Objective:** Ensure all contributions follow a consistent Git branching workflow based on Git Flow principles using `staging` as the primary development branch.
+
+## Primary Branches:
+
+*   `main`: Represents production-ready code. Direct commits are forbidden. Merges only occur from `staging` after successful testing and release.
+*   `staging`: Represents the integration branch for the next release. This is the primary branch for development activity.
+
+## Feature/Bugfix/Chore Branching Process:
+
+1.  **Base Branch:** All new work (features, bugfixes, chores) **MUST** branch from the `staging` branch.
+2.  **Update Local `staging`:** Before creating a new branch, ensure your local `staging` branch is synchronized with the remote repository:
+    ```bash
+    git checkout staging
+    git pull origin staging
+    ```
+3.  **Create New Branch:** Create a descriptively named branch using the format `<type>/<short-description>`:
+    ```bash
+    # Example for a feature:
+    git checkout -b feat/new-user-profile
+
+    # Example for a bugfix:
+    git checkout -b bugfix/login-redirect-issue
+
+    # Example for a chore:
+    git checkout -b chore/update-linter-config
+    ```
+    *   Use conventional commit types (`feat`, `fix`, `chore`, `refactor`, `docs`, `test`, etc.) as the prefix.
+4.  **Work on Branch:** Make your code changes and commits on this new branch.
+5.  **Push Branch (Optional but Recommended):** Push your branch early and often:
+    ```bash
+    git push -u origin <your-branch-name>
+    ```
+
+## Pull Requests (PRs):
+
+*   All feature, bugfix, and chore branches **MUST** target the `staging` branch when creating a Pull Request.
+*   PRs into `staging` require review and passing CI checks before merging.
+
+## Release Process:
+
+*   When `staging` is deemed ready for release, a PR is created from `staging` to `main`.
+*   After merging to `main`, tag the release appropriately.

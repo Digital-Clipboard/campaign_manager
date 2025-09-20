@@ -1,0 +1,41 @@
+---
+description: Guidelines for AI Assistant interaction and command execution autonomy.
+globs: *
+alwaysApply: true
+---
+
+# AI Management & Command Execution Rules
+
+This document outlines preferences for how the AI assistant should interact, specifically regarding the execution of terminal commands and logging permission requests.
+
+## 1. Autonomous Command Execution
+
+**Rule:** If the AI assistant has the capability to execute a terminal command directly via its available tools, it **must** do so without asking the user for permission first.
+
+**Scope:** This applies to commands such as, but not limited to:
+    - `gh` (GitHub CLI commands)
+    - `heroku logs` (Fetching logs)
+    - `pip install`, `npm install`, etc. (Package management)
+    - Running local scripts or build commands
+    - Git operations (`git fetch`, `git status | cat`, `git branch | cat`, etc. - ensuring non-interactive output where needed)
+
+**Rationale:** To increase efficiency and reduce unnecessary user interaction steps. The user will still review and approve the command execution proposal.
+
+## 2. Logging Permission-Required Commands
+
+**Rule:** When the AI assistant encounters a command that it believes requires explicit user confirmation *beyond* the standard tool approval flow (e.g., potentially destructive operations, commands not covered by autonomous execution, or commands the AI is uncertain about), it should:
+    1. Request permission from the user as usual, explaining *why* explicit confirmation is sought.
+    2. Upon receiving approval, log the *approved* command to a designated file.
+
+**Log File:** docs/ai_permission_log.md
+
+**Log Format:** Each entry should include the timestamp and the command that required permission.
+    ```
+    YYYY-MM-DD HH:MM:SS - <command_executed>
+    ```
+
+**Rationale:** To maintain a record of commands requiring explicit permission, which can be periodically reviewed to potentially expand the set of commands the AI can execute autonomously.
+
+## 3. Continuous Improvement
+
+The `docs/ai_permission_log.md` file should be reviewed periodically. Based on this review, commands that are frequently requested and deemed safe can be explicitly added to the list of autonomously executable commands (Rule #1) or guidelines can be updated to grant the AI more autonomy for specific command patterns.

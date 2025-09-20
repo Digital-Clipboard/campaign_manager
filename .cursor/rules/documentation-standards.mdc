@@ -1,0 +1,346 @@
+---
+description: Standardized rules for project documentation, organized by subject matter and development lifecycle.
+globs:
+  - 'docs/**/*.md'
+  - '*.md'
+alwaysApply: true
+---
+
+# Project Documentation Standards
+
+This document outlines the standardized approach for creating and organizing project documentation. Our methodology is rooted in the "Docs-as-Code" philosophy, treating documentation as a deliverable with the same importance as software.
+
+## 1. Guiding Philosophy
+
+*   **Docs-as-Code:** We treat documentation with the same rigor as application code. It is version-controlled, reviewed, and lives close to the concepts it describes.
+*   **Organization by Subject:** Instead of grouping by type (e.g., all guides together), we primarily organize documentation by feature, project, or architectural component. This keeps related artifacts (brainstorms, specs, plans) co-located.
+*   **The Diátaxis Framework:** We use the [Diátaxis framework](https://diataxis.fr/) as a mental model to ensure we create four distinct types of documentation to meet user needs:
+    *   **Tutorials:** Learning-oriented, guided lessons.
+    *   **How-To Guides:** Goal-oriented, problem-solving steps.
+    *   **Reference:** Information-oriented, technical descriptions.
+    *   **Explanation:** Understanding-oriented, clarifying context and concepts.
+
+## 2. Directory Structure
+
+All project documentation resides within the `/docs` directory. The structure is designed to be browsed directly in the repository and to be built into a static site.
+
+```
+docs/
+├── README.md
+├── architecture/
+│   ├── README.md
+│   └── adrs/
+│       ├── 001-use-redis-for-caching.md
+│       └── adr_template.md
+├── guides/
+│   ├── local-development-setup.md
+│   └── deployment-process.md
+├── specs/
+│   ├── [NN-feature-name]/
+│   │   ├── README.md
+│   │   ├── 01-brainstorming.md
+│   │   ├── 02-architecture.md
+│   │   ├── 03-specification.md
+│   │   ├── 04-tdd-test-specification.md
+│   │   ├── 05-implementation-checklist.md
+│   │   ├── 06-decisions.md
+│   │   ├── 07-integration-sequence.md
+│   │   ├── 08-failure-modes.md
+│   │   └── examples/
+│   └── ...
+└── _templates/
+    ├── 01-brainstorming-template.md
+    ├── 02-architecture-template.md
+    ├── 03-specification-template.md
+    ├── 04-tdd-test-specification-template.md
+    ├── 05-implementation-checklist-template.md
+    ├── 06-decisions-template.md
+    ├── 07-integration-sequence-template.md
+    └── 08-failure-modes-template.md
+```
+
+*   `docs/README.md`: The main entry point. Explains the documentation structure and links to key areas.
+*   `docs/architecture/`: For high-level, cross-cutting architectural concerns. Contains `ADRs` (Architecture Decision Records) which log significant design choices.
+*   `docs/guides/`: For step-by-step instructions on cross-cutting tasks (e.g., local setup, deployment). These are our "How-To Guides."
+*   `docs/specs/`: The core of our feature documentation, organized by feature or epic. It follows our development lifecycle from idea to implementation.
+*   `docs/_templates/`: Contains markdown templates for consistent document creation (e.g., for specs, ADRs).
+
+## 3. The Feature Development Lifecycle (`specs/`)
+
+This directory is central to our workflow. Each subdirectory within `docs/specs/` represents a single feature enhancement to the release notes system.
+
+Our streamlined 3-phase methodology provides appropriate documentation for release notes features while enabling AI implementation:
+
+### 3.1 Required Document Structure
+
+Each feature MUST follow this standardized 3-document structure:
+
+```
+docs/specs/[feature-name]/
+├── README.md                     [Developer overview and current status]
+├── 01-specification.md          [Requirements, scope, and acceptance criteria]
+├── 02-implementation.md         [Technical approach and architecture]
+├── 03-testing.md               [Testing strategy and validation plan]
+└── examples/                    [Code samples & test data]
+```
+
+### 3.2 Document Requirements by Phase
+
+#### Phase 1: `01-specification.md` - Requirements and Scope
+**Purpose**: Define clear requirements, scope, and acceptance criteria for the feature
+**Required Sections**:
+- **Problem Statement**: Business context and problem being solved
+- **Explicit Assumptions**: Key assumptions with validation criteria (critical for AI success)
+- **Functional Requirements**: Clear requirements with unique IDs (e.g., REL-001, REL-002)
+- **Non-functional Requirements**: Performance, security, and quality requirements
+- **Success Criteria**: Quantitative measures for completion
+- **Scope Boundaries**: What is included and excluded from this feature
+- **Acceptance Criteria**: Testable criteria for each requirement
+
+#### Phase 2: `02-implementation.md` - Technical Approach and Architecture
+**Purpose**: Define technical approach and integration with existing system
+**Required Sections**:
+- **System Integration**: How this feature integrates with existing release notes system
+- **Technical Approach**: Implementation strategy and key technical decisions
+- **Data Models**: Any new or modified Pydantic models required
+- **API Changes**: New or modified functions, classes, and interfaces
+- **Dependencies**: External libraries, services, or system dependencies
+- **Migration Plan**: How to transition from current state (if applicable)
+
+#### Phase 3: `03-testing.md` - Testing Strategy and Validation
+**Purpose**: Comprehensive testing approach to ensure feature quality
+**Required Sections**:
+- **Test Strategy**: Unit, integration, and end-to-end testing approach
+- **Test Cases**: Specific test cases for each requirement ID
+- **Test Data**: Required test data and fixtures
+- **Performance Testing**: If applicable, performance validation approach
+- **Error Handling Tests**: Edge cases and error scenario testing
+- **Validation Plan**: How to verify the feature works as expected
+
+### 3.3 Quality Gates & Success Criteria
+
+Each phase MUST meet specific quality gates before proceeding to implementation:
+
+#### Documentation Quality Gates
+- **Requirement Clarity**: Every requirement has unique ID and clear acceptance criteria
+- **Assumption Documentation**: All key assumptions documented with validation methods
+- **Test Planning**: Appropriate test coverage planned for feature scope
+- **Integration Clarity**: How feature integrates with existing release notes system
+
+#### Implementation Success Criteria
+- **AI Implementation Ready**:
+  - Specifications must be clear enough for AI to implement without clarification
+  - Test cases must validate that implementation matches expectations exactly
+  - Technical approach must integrate cleanly with existing codebase
+- **Quality Standards**: Code follows established patterns and conventions
+- **Test Coverage**: Appropriate test coverage for feature complexity
+- **Documentation**: Implementation aligns with specification requirements
+
+### 3.4 Feature Evolution and Refactoring
+
+When a feature requires significant changes or refactoring, we maintain documentation history while keeping current information accessible.
+
+*   **Create Versioned Documents:** For major changes, create new documents named `01-specification_v2.md`, `02-implementation_v2.md`, `03-testing_v2.md`, etc.
+*   **Archive Previous Versions:** Move the original documents into a new `archive/` subdirectory within the feature's folder.
+*   **Update the README:** The main `README.md` should always reflect the current state of the feature.
+*   **Preserve Context:** Maintain links to previous versions to understand feature evolution
+
+## 4. Consumption Strategy: AI-First
+
+Our primary method for interacting with and consuming this documentation is through an AI-powered assistant directly within the IDE or a centralized chat interface.
+
+The well-structured and organized Markdown files in this directory serve as the "source of truth" or corpus for this AI. As such, the primary goal of our documentation effort is to create high-quality, machine-readable content that enables the AI to provide accurate, synthesized, and context-aware answers.
+
+Static site generators like Sphinx or MkDocs are explicitly **not** used. The overhead of maintaining build configurations and themes is unnecessary when the primary interface is conversational AI. All effort should be focused on the quality and structure of the Markdown content itself.
+
+## 5. AI Assistant Responsibilities
+
+The AI assistant is responsible for enforcing our documentation methodology and ensuring implementation success:
+
+### 5.1 Feature Initiation Responsibilities
+*   **New Features:** When starting a new feature, the AI MUST propose creating a new subdirectory under `docs/specs/` following the 3-phase structure
+*   **Template Enforcement:** The AI MUST use templates from `docs/_templates/` to create initial documents with all required sections
+*   **Requirement ID Assignment:** The AI MUST assign unique IDs to all requirements (REL-001, REL-002, etc.) and maintain traceability
+*   **Assumption Documentation:** The AI MUST identify and document key assumptions with validation criteria before proceeding
+
+### 5.2 Quality Implementation
+*   **Test Planning:** The AI MUST define appropriate test strategy before implementation begins
+*   **Code Quality:** The AI MUST follow established patterns and conventions in the release notes codebase
+*   **Integration Testing:** The AI MUST ensure features integrate properly with existing release notes system
+*   **Documentation Alignment:** The AI MUST verify implementation matches specification requirements
+
+### 5.3 Documentation Enforcement
+*   **Phase Completeness:** The AI MUST verify all 3 phases are appropriately documented before implementation
+*   **Assumption Validation:** The AI MUST validate documented assumptions against actual system behavior
+*   **Integration Clarity:** The AI MUST ensure clear documentation of how features integrate with existing system
+*   **Requirement Traceability:** The AI MUST maintain clear links between requirements and implementation
+
+### 5.4 Implementation Standards
+*   **Specification Adherence:** The AI MUST validate that implementation matches specifications
+*   **Error Handling:** The AI MUST implement appropriate error handling for the feature scope
+*   **Performance Consideration:** The AI MUST consider performance impact on release notes generation
+*   **Maintenance Support:** The AI MUST write maintainable code that fits existing architecture patterns
+
+## 6. Template Standards and Validation
+
+### 6.1 Document Template Requirements
+
+Each of the 3 required documents MUST contain standardized sections to ensure consistency and completeness:
+
+#### 6.1.1 Common Template Elements
+All documents MUST include:
+- Document information header (version, date, status)
+- Purpose statement
+- Clear scope definition
+- Related documents/dependencies
+
+#### 6.1.2 Phase-Specific Template Requirements
+
+**01-specification.md Template**:
+```
+# [Feature Name] - Specification
+
+## Document Information
+- Version: [x.x]
+- Date: [YYYY-MM-DD]
+- Status: [Draft/Final]
+
+## Problem Statement
+[Business context and problem being solved]
+
+## Assumptions
+[Key assumptions with validation criteria]
+
+## Functional Requirements
+### [REL-001] [Requirement Name]
+**Priority**: Must Have/Should Have/Could Have
+**Description**: [Clear requirement statement]
+**Acceptance Criteria**: [Testable criteria]
+
+## Non-Functional Requirements
+[Performance, quality, and other non-functional aspects]
+
+## Scope Boundaries
+[What is included and excluded]
+
+## Success Criteria
+[How to measure completion]
+```
+
+**02-implementation.md Template**:
+```
+# [Feature Name] - Implementation
+
+## Document Information
+- Version: [x.x]
+- Date: [YYYY-MM-DD]
+- Status: [Draft/Final]
+
+## System Integration
+[How this integrates with existing release notes system]
+
+## Technical Approach
+[Implementation strategy and key decisions]
+
+## Data Models
+[New or modified Pydantic models]
+
+## API Changes
+[New or modified functions, classes, interfaces]
+
+## Dependencies
+[External libraries or system dependencies]
+
+## Migration Plan
+[How to transition from current state]
+```
+
+**03-testing.md Template**:
+```
+# [Feature Name] - Testing
+
+## Document Information
+- Version: [x.x]
+- Date: [YYYY-MM-DD]
+- Status: [Draft/Final]
+
+## Test Strategy
+[Unit, integration, and end-to-end approach]
+
+## Test Cases
+[Specific test cases for each requirement]
+
+## Test Data
+[Required test data and fixtures]
+
+## Performance Testing
+[Performance validation approach if applicable]
+
+## Error Handling Tests
+[Edge cases and error scenarios]
+
+## Validation Plan
+[How to verify feature works as expected]
+```
+
+### 6.2 Validation Checklist
+
+Before any implementation begins, AI MUST validate each document contains:
+
+#### Documentation Validation
+- [ ] All 3 required documents exist (specification, implementation, testing)
+- [ ] Each document follows template structure
+- [ ] All requirements have unique IDs (REL-001, REL-002, etc.)
+- [ ] Key assumptions documented with validation criteria
+- [ ] Integration with existing release notes system is clear
+- [ ] Test strategy is appropriate for feature scope
+
+#### Quality Gate Validation
+- [ ] Requirements are clear and testable
+- [ ] Technical approach integrates with existing codebase
+- [ ] Test coverage plan is appropriate for feature complexity
+- [ ] Error handling approach is documented
+- [ ] Success criteria are measurable
+
+## 7. Writing Style Guidelines
+
+*   **Headers:** Use ATX-style headers (`#` for H1, `##` for H2, etc.) with a space after the # character. Use sentence case for headers.
+*   **Lists:** Use `-` for unordered lists and `1.` for ordered lists.
+*   **Emphasis:** Use `**bold**` for strong emphasis and `*italic*` for regular emphasis. Use bold sparingly.
+*   **Code:** Use backticks (`) for inline code (e.g., `variable_name`, `function()`, `ClassName`) and triple backticks (```) for code blocks with language specifiers (e.g., ```python).
+*   **Blockquotes:** Use `>` for blockquotes.
+*   **Links:** Use `[link text](mdc:relative/path/to/file.md)` for internal links and `[link text](mdc:https:/example.com)` for external links.
+*   **Images:** Use `![alt text](mdc:../_static/images/image.png)` for images, referencing files stored in `docs/_static/images/`. Provide descriptive alt text.
+*   **Diagrams:** Use ASCII diagrams within `txt` or `text` code blocks instead of Mermaid or other graphical formats to ensure portability and accessibility.
+
+## 8. Implementation Success Framework
+
+This streamlined 3-phase methodology is designed to ensure AI implementations of release notes features achieve key objectives:
+
+### 8.1 Clear Requirements
+- **Requirement Clarity**: Unique IDs (REL-001, etc.) enable precise mapping between specification and implementation
+- **Assumption Documentation**: Key assumptions documented to prevent scope drift
+- **Success Criteria**: Clear measures provide unambiguous validation targets
+- **Focused Scope**: Specifications focus on release notes system enhancements
+
+### 8.2 Clean Integration
+- **System Integration**: Clear documentation of how features integrate with existing release notes system
+- **Code Quality**: Implementation follows established patterns and conventions
+- **Error Handling**: Appropriate error handling for the feature scope
+- **Maintainable Code**: Code that fits existing architecture patterns
+
+### 8.3 Quality Delivery
+- **Test Strategy**: Appropriate testing approach for feature complexity
+- **Documentation Alignment**: Implementation matches specification requirements
+- **Performance Consideration**: Impact on release notes generation is considered
+- **Maintenance Support**: Code is maintainable and follows project standards
+
+### 8.4 Success Metrics
+
+The success of this methodology can be measured by:
+- **AI Implementation Success Rate**: % of features implemented by AI without clarification requests
+- **Integration Quality**: How cleanly features integrate with existing system
+- **Maintenance Ease**: Time required to understand and modify existing features
+- **Documentation Accuracy**: How well implementation matches specification
+
+This focused framework provides appropriate documentation rigor for release notes features while enabling efficient AI-assisted development.

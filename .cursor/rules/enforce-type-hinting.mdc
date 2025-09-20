@@ -1,0 +1,40 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+---
+description: Cursor Rules – Type Hinting and Docstring Standards
+globs:
+alwaysApply: true
+---
+# Cursor Rules – Type Hinting and Docstring Standards
+
+These rules enforce consistent use of type annotations and structured documentation across all functions and methods in Python, JavaScript, and TypeScript. They aim to promote clarity, maintainability, and alignment with best practices.
+
+## General Requirements
+
+All functions and methods **must**:
+- Include **type annotations** (Python) or **JSDoc/TypeScript types** (JavaScript/TypeScript)
+- Use **Google-style docstrings** or equivalent structured comments (e.g. JSDoc for JS/TS)
+- Provide clear descriptions for parameters, return values, and possible errors
+- Follow consistent naming and formatting conventions
+
+## Type Annotations
+
+**Python**
+- Every parameter and return value must be explicitly typed.
+- Use standard Python type hints, including `Optional`, `Union`, `List`, `Dict`, etc.
+
+```python
+def calculate_total(price: float, quantity: int) -> float:
+    """Calculates the total cost.
+
+    Args:
+        price (float): Price per unit.
+        quantity (int): Number of units.
+
+    Returns:
+        float: Total cost.
+    """
+    return price * quantity

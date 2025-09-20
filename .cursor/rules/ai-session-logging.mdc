@@ -1,0 +1,81 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# AI Session Logging & Review Protocol
+
+## 1. Objective
+
+To maintain a transparent, immutable, and easily reviewable log of all significant AI-assisted development sessions. This log serves as a record of tasks attempted, problems encountered, solutions implemented, and final outcomes, ensuring accountability and providing valuable context for future work.
+
+## 2. Trigger
+
+This protocol must be followed at the **conclusion of any significant AI-driven coding session**, especially those involving architectural changes, debugging complex issues, or implementing new features.
+
+## 3. Log File Creation
+
+At the end of a session, a new log file **must** be created.
+
+*   **Directory:** `docs/source/notes/ai_sessions/`
+    *(If this directory does not exist, it should be created.)*
+
+*   **Filename Convention:** `YYYY-MM-DD_HHMM_session_summary.md`
+    *(e.g., `2025-07-05_1430_session_summary.md`)*
+
+## 4. Required Log Content
+
+Each session log file must contain the following sections in this order:
+
+### **`# AI Session Log: YYYY-MM-DD HH:MM`**
+
+A main title with the date and time of the session's conclusion.
+
+### **`## 1. Session Goal`**
+
+A brief, one or two-sentence description of the high-level objective for the session.
+*(e.g., "To diagnose and resolve the H12 request timeout error on the get_all_customers endpoint.")*
+
+### **`## 2. Summary of Activities & Outcomes`**
+
+A human-readable summary describing the key activities and their results. This should narrate the journey of the session.
+
+*   **Initial State:** Briefly describe the state of the system at the start.
+*   **Key Steps:** Detail the investigation process, including diagnosis, proposed solutions, and implementation steps.
+*   **Final Outcome:** State the final resolution and the state of the system at the end of the session.
+
+### **`## 3. Key Artifacts Produced`**
+
+A list of links to any significant artifacts created or modified during the session.
+
+*   **Modified Files:** List any source code, documentation, or configuration files that were changed.
+*   **New Files:** List any new files that were created.
+*   **Pull Requests:** Provide a direct link to any PRs that were opened.
+*   **Other:** Links to new Heroku apps, database tables, etc.
+
+### **`## 4. Issues & Resolutions`**
+
+A specific breakdown of any problems, errors, or unexpected behavior encountered during the session, and the corresponding solution that was implemented.
+
+| Issue Encountered | Resolution |
+| :--- | :--- |
+| e.g., `H12 Timeout Error` | Decoupled the long-running task into a background job using Celery and cached the results in Redis. |
+| e.g., `GitHub CLI Auth Failure` | Unset the `GITHUB_TOKEN` environment variable to allow the CLI to use its stored credentials. |
+
+
+### **`## 5. Detailed Session Transcript`**
+
+This section is for the complete, unabridged log of the interaction. It should be placed within a collapsible details tag to keep the document clean.
+
+````markdown
+<details>
+<summary>Click to view full session transcript</summary>
+
+```
+[--- PASTE THE ENTIRE RAW CONVERSATION/TERMINAL LOG HERE ---]
+```
+
+</details>
+````
+
+This structure will ensure that every session is documented consistently, providing immense value for future reviews, debugging, and onboarding.
