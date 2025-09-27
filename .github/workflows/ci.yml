@@ -2,9 +2,9 @@ name: Campaign Manager CI/CD
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, staging ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, staging ]
 
 env:
   NODE_VERSION: '20'
@@ -235,48 +235,61 @@ jobs:
             campaign-manager:test \
             node --version
 
-  # Deploy to staging (only on develop branch)
-  deploy-staging:
-    name: Deploy to Staging
+  # Claude Code Review (only on pull requests)
+  claude-review:
+    name: Claude Code Review
     runs-on: ubuntu-latest
-    needs: [lint, test-unit, test-integration, security, docker]
-    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
-    environment: staging
+    if: github.event_name == 'pull_request'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Deploy to staging
-        run: |
-          echo "Deploying to staging environment..."
-          # Add your staging deployment commands here
-          # This could involve:
-          # - Building and pushing Docker images
-          # - Deploying to cloud platforms
-          # - Running smoke tests
+      - name: Claude Code Review
+        uses: anthropics/claude-code-review-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          claude-api-key: ${{ secrets.CLAUDE_API_KEY }}
+          review-level: 'thorough'
+          focus-areas: 'security,performance,best-practices'
 
-  # Deploy to production (only on main branch)
-  deploy-production:
-    name: Deploy to Production
+  # Deploy to staging (only on staging branch) - Heroku auto-deploys
+  staging-notification:
+    name: Staging Deployment Notification
+    runs-on: ubuntu-latest
+    needs: [lint, test-unit, test-integration, security, docker]
+    if: github.ref == 'refs/heads/staging' && github.event_name == 'push'
+
+    steps:
+      - name: Notify Slack - Staging Build Complete
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_MESSAGE: |
+            🚀 Campaign Manager CI/CD completed for staging branch
+            ⏳ Heroku auto-deployment to staging in progress
+            🌐 Will be available at: https://campaign-manager-staging-v2-9cef3da6a62f.herokuapp.com
+          SLACK_COLOR: '#36a64f'
+
+  # Production branch sync notification (main branch is code storage only)
+  main-branch-sync:
+    name: Main Branch Code Sync
     runs-on: ubuntu-latest
     needs: [lint, test-unit, test-integration, security, docker]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment: production
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy to production
-        run: |
-          echo "Deploying to production environment..."
-          # Add your production deployment commands here
-          # This should include:
-          # - Database migrations
-          # - Zero-downtime deployment
-          # - Health checks
-          # - Rollback procedures
+      - name: Notify Slack - Main Branch Updated
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_MESSAGE: |
+            📚 Campaign Manager main branch updated (code storage sync)
+            ℹ️ No deployment triggered - use Heroku pipeline promotion for production
+            🔗 Promote from staging: `heroku pipelines:promote -a campaign-manager-staging-v2`
+          SLACK_COLOR: '#2196F3'
 
   # Performance tests (nightly)
   performance:
