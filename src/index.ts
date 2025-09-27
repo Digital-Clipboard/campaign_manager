@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
-import { createServer } from '@/api/server-minimal';
-import { logger } from '@/utils/logger';
+import { createServer } from './api/server-minimal';
+import { logger } from './utils/logger';
 
 // Load environment variables
 dotenv.config();
