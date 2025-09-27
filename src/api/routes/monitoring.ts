@@ -42,7 +42,7 @@ const monitoring: FastifyPluginAsync = async (fastify) => {
         })
       }
     }
-  }, async (request, reply) => {
+  }, async (_request, reply) => {
     try {
       // Try to get cached health status first
       let health = await healthMonitor.getCachedHealthStatus();
@@ -88,7 +88,7 @@ const monitoring: FastifyPluginAsync = async (fastify) => {
         })
       }
     }
-  }, async (request, reply) => {
+  }, async (_request, reply) => {
     try {
       const health = await healthMonitor.performHealthCheck();
 
@@ -133,7 +133,7 @@ const monitoring: FastifyPluginAsync = async (fastify) => {
         })
       }
     }
-  }, async (request, reply) => {
+  }, async (_request, reply) => {
     try {
       const metrics = await healthMonitor.updateMetrics();
 
@@ -591,7 +591,7 @@ const monitoring: FastifyPluginAsync = async (fastify) => {
         })
       }
     }
-  }, async (request, reply) => {
+  }, async (_request, reply) => {
     try {
       const [health, metrics, recentAlerts] = await Promise.all([
         healthMonitor.getCachedHealthStatus() || healthMonitor.performHealthCheck(),

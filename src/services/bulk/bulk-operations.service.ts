@@ -1,9 +1,9 @@
 import { PrismaClient } from '@prisma/client';
 import { logger } from '@/utils/logger';
-import { NotificationService } from '@/services/notification.service';
-import { CampaignService } from '@/services/campaign.service';
-import { TaskService } from '@/services/task.service';
-import { ApprovalService } from '@/services/approval.service';
+import { NotificationService } from '@/services/notification/notification.service';
+import { CampaignService } from '@/services/campaign/campaign.service';
+import { TaskService } from '@/services/task/task.service';
+import { ApprovalService } from '@/services/approval/approval.service';
 
 export interface BulkOperationResult {
   success: number;

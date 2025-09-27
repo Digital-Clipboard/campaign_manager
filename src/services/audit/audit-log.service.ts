@@ -48,7 +48,7 @@ export class AuditLogService {
   // Core Audit Logging
   async logAction(entry: Omit<AuditLogEntry, 'id' | 'timestamp'>): Promise<string> {
     try {
-      const auditEntry = await this.prisma.auditLog.create({
+      const auditEntry = await this.prisma.activityLog.create({
         data: {
           entityType: entry.entityType,
           entityId: entry.entityId,
@@ -368,13 +368,13 @@ export class AuditLogService {
     }
 
     const [entries, total] = await Promise.all([
-      this.prisma.auditLog.findMany({
+      this.prisma.activityLog.findMany({
         where,
         orderBy: { timestamp: 'desc' },
         skip,
         take: limit
       }),
-      this.prisma.auditLog.count({ where })
+      this.prisma.activityLog.count({ where })
     ]);
 
     const formattedEntries: AuditLogEntry[] = entries.map(entry => ({
@@ -402,7 +402,7 @@ export class AuditLogService {
   }
 
   async getAuditTrail(entityType: string, entityId: string): Promise<AuditLogEntry[]> {
-    const entries = await this.prisma.auditLog.findMany({
+    const entries = await this.prisma.activityLog.findMany({
       where: {
         entityType,
         entityId
@@ -447,15 +447,15 @@ export class AuditLogService {
       actionsByUser,
       timelineData
     ] = await Promise.all([
-      this.prisma.auditLog.count({
+      this.prisma.activityLog.count({
         where: { timestamp: { gte: startDate } }
       }),
-      this.prisma.auditLog.groupBy({
+      this.prisma.activityLog.groupBy({
         by: ['action'],
         _count: { action: true },
         where: { timestamp: { gte: startDate } }
       }),
-      this.prisma.auditLog.groupBy({
+      this.prisma.activityLog.groupBy({
         by: ['userEmail'],
         _count: { userEmail: true },
         where: { timestamp: { gte: startDate } },
@@ -502,7 +502,7 @@ export class AuditLogService {
       const date = new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000);
       const nextDate = new Date(date.getTime() + 24 * 60 * 60 * 1000);
 
-      const count = await this.prisma.auditLog.count({
+      const count = await this.prisma.activityLog.count({
         where: {
           timestamp: {
             gte: date,
@@ -525,7 +525,7 @@ export class AuditLogService {
     entityId: string;
     count: number;
   }>> {
-    const results = await this.prisma.auditLog.groupBy({
+    const results = await this.prisma.activityLog.groupBy({
       by: ['entityType', 'entityId'],
       _count: { id: true },
       where: {
@@ -549,7 +549,7 @@ export class AuditLogService {
 
     logger.info('Starting audit log cleanup', { cutoffDate, olderThanDays });
 
-    const deleteResult = await this.prisma.auditLog.deleteMany({
+    const deleteResult = await this.prisma.activityLog.deleteMany({
       where: {
         timestamp: { lt: cutoffDate }
       }

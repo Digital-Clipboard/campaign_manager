@@ -1,7 +1,7 @@
 import { FastifyPluginAsync } from 'fastify';
 import { Type } from '@sinclair/typebox';
 import { TemplateService } from '@/services/templates/template.service';
-import { CampaignService } from '@/services/campaign.service';
+import { CampaignService } from '@/services/campaign/campaign.service';
 import { logger } from '@/utils/logger';
 
 const templates: FastifyPluginAsync = async (fastify) => {

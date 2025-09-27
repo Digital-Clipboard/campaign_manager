@@ -265,7 +265,7 @@ export class MCPServerAdapter {
           case 'getTeamAvailability': {
             const validated = GetTeamAvailabilityRequest.parse(params);
             result = await this.teamService.getTeamAvailability(
-              new Date(),
+              validated.date ? new Date(validated.date) : new Date(),
               validated.skills || []
             );
             break;
@@ -306,7 +306,8 @@ export class MCPServerAdapter {
             result = await this.approvalService.processDecision(
               validated.approvalId,
               {
-                decision: validated.decision === 'approved' ? 'approve' : validated.decision === 'rejected' ? 'reject' : 'request_changes'
+                decision: validated.decision === 'approved' ? 'approve' : validated.decision === 'rejected' ? 'reject' : 'request_changes',
+                comments: validated.comments || ''
               },
               validated.decidedBy
             );
