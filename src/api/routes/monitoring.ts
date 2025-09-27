@@ -42,7 +42,7 @@ const monitoring: FastifyPluginAsync = async (fastify) => {
         })
       }
     }
-  }, async (_request, reply) => {
+  }, async (request, reply) => {
     try {
       // Try to get cached health status first
       let health = await healthMonitor.getCachedHealthStatus();
@@ -88,7 +88,7 @@ const monitoring: FastifyPluginAsync = async (fastify) => {
         })
       }
     }
-  }, async (_request, reply) => {
+  }, async (request, reply) => {
     try {
       const health = await healthMonitor.performHealthCheck();
 
@@ -133,7 +133,7 @@ const monitoring: FastifyPluginAsync = async (fastify) => {
         })
       }
     }
-  }, async (_request, reply) => {
+  }, async (request, reply) => {
     try {
       const metrics = await healthMonitor.updateMetrics();
 
@@ -165,7 +165,7 @@ const monitoring: FastifyPluginAsync = async (fastify) => {
         })
       }
     }
-  }, async (_request, reply) => {
+  }, async (request, reply) => {
     try {
       const { hours = 24 } = request.query as any;
       const history = await healthMonitor.getHealthHistory(hours);
@@ -198,7 +198,7 @@ const monitoring: FastifyPluginAsync = async (fastify) => {
         })
       }
     }
-  }, async (_request, reply) => {
+  }, async (request, reply) => {
     try {
       const { hours = 24 } = request.query as any;
       const history = await healthMonitor.getMetricsHistory(hours);
@@ -237,7 +237,7 @@ const monitoring: FastifyPluginAsync = async (fastify) => {
         })
       }
     }
-  }, async (_request, reply) => {
+  }, async (request, reply) => {
     try {
       const { hours = 24, severity } = request.query as any;
       let alerts = await healthMonitor.getAlertHistory(hours);
@@ -301,7 +301,7 @@ const monitoring: FastifyPluginAsync = async (fastify) => {
         })
       }
     }
-  }, async (_request, reply) => {
+  }, async (request, reply) => {
     try {
       const query = request.query as any;
 
@@ -357,7 +357,7 @@ const monitoring: FastifyPluginAsync = async (fastify) => {
         })
       }
     }
-  }, async (_request, reply) => {
+  }, async (request, reply) => {
     try {
       const { entityType, entityId } = request.params as { entityType: string; entityId: string };
       const trail = await auditService.getAuditTrail(entityType, entityId);
@@ -393,7 +393,7 @@ const monitoring: FastifyPluginAsync = async (fastify) => {
         })
       }
     }
-  }, async (_request, reply) => {
+  }, async (request, reply) => {
     try {
       const { userEmail } = request.params as { userEmail: string };
       const { days = 30 } = request.query as any;
@@ -445,7 +445,7 @@ const monitoring: FastifyPluginAsync = async (fastify) => {
         })
       }
     }
-  }, async (_request, reply) => {
+  }, async (request, reply) => {
     try {
       const { days = 30 } = request.query as any;
       const summary = await auditService.generateAuditSummary(days);
@@ -492,7 +492,7 @@ const monitoring: FastifyPluginAsync = async (fastify) => {
         })
       }
     }
-  }, async (_request, reply) => {
+  }, async (request, reply) => {
     try {
       const { format = 'json', ...query } = request.body as any;
 
@@ -542,7 +542,7 @@ const monitoring: FastifyPluginAsync = async (fastify) => {
         })
       }
     }
-  }, async (_request, reply) => {
+  }, async (request, reply) => {
     try {
       const { olderThanDays = 365 } = request.body as any;
       const userId = request.user as string || 'system';
@@ -591,7 +591,7 @@ const monitoring: FastifyPluginAsync = async (fastify) => {
         })
       }
     }
-  }, async (_request, reply) => {
+  }, async (request, reply) => {
     try {
       const [health, metrics, recentAlerts] = await Promise.all([
         healthMonitor.getCachedHealthStatus() || healthMonitor.performHealthCheck(),
