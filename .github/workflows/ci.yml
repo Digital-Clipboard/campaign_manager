@@ -263,15 +263,21 @@ jobs:
     if: github.ref == 'refs/heads/staging' && github.event_name == 'push'
 
     steps:
-      - name: Notify Slack - Staging Build Complete
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_MESSAGE: |
-            🚀 Campaign Manager CI/CD completed for staging branch
-            ⏳ Heroku auto-deployment to staging in progress
-            🌐 Will be available at: https://campaign-manager-staging-v2-9cef3da6a62f.herokuapp.com
-          SLACK_COLOR: '#36a64f'
+      - name: Notify Deployment via Campaign Manager
+        run: |
+          curl -X POST "https://campaign-manager-staging-087b1925d6ef.herokuapp.com/api/v1/webhooks/deployment" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.CAMPAIGN_MANAGER_API_KEY }}" \
+            -d '{
+              "event": "deployment_started",
+              "environment": "staging",
+              "branch": "${{ github.ref_name }}",
+              "commit": "${{ github.sha }}",
+              "actor": "${{ github.actor }}",
+              "repository": "${{ github.repository }}",
+              "url": "https://campaign-manager-staging-087b1925d6ef.herokuapp.com",
+              "workflow_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }' || echo "Notification failed - continuing deployment"
 
   # Production branch sync notification (main branch is code storage only)
   main-branch-sync:
@@ -281,15 +287,20 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
-      - name: Notify Slack - Main Branch Updated
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_MESSAGE: |
-            📚 Campaign Manager main branch updated (code storage sync)
-            ℹ️ No deployment triggered - use Heroku pipeline promotion for production
-            🔗 Promote from staging: `heroku pipelines:promote -a campaign-manager-staging-v2`
-          SLACK_COLOR: '#2196F3'
+      - name: Notify Main Branch Sync via Campaign Manager
+        run: |
+          curl -X POST "https://campaign-manager-staging-087b1925d6ef.herokuapp.com/api/v1/webhooks/deployment" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.CAMPAIGN_MANAGER_API_KEY }}" \
+            -d '{
+              "event": "branch_sync",
+              "environment": "main",
+              "branch": "${{ github.ref_name }}",
+              "commit": "${{ github.sha }}",
+              "actor": "${{ github.actor }}",
+              "repository": "${{ github.repository }}",
+              "message": "Main branch updated - use pipeline promotion for production deployment"
+            }' || echo "Notification failed - continuing"
 
   # Performance tests (nightly)
   performance:
