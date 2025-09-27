@@ -1,35 +1,34 @@
 # Multi-stage Dockerfile for Campaign Manager
 FROM node:20-alpine AS base
-RUN corepack enable pnpm
 WORKDIR /app
 
 # Dependencies stage
 FROM base AS deps
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+COPY package.json package-lock.json ./
+RUN npm ci
 
 # Development stage
 FROM base AS development
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+COPY package.json package-lock.json ./
+RUN npm ci
 COPY . .
-RUN pnpm prisma generate
+RUN npx prisma generate
 EXPOSE 3001
-CMD ["pnpm", "dev"]
+CMD ["npm", "run", "dev"]
 
 # Build stage
 FROM base AS build
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+COPY package.json package-lock.json ./
+RUN npm ci
 COPY . .
-RUN pnpm prisma generate
-RUN pnpm build
+RUN npx prisma generate
+RUN npm run build
 
 # Production stage
 FROM base AS production
 ENV NODE_ENV=production
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --prod --frozen-lockfile && pnpm store prune
+COPY package.json package-lock.json ./
+RUN npm ci --only=production
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
