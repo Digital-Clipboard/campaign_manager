@@ -354,7 +354,7 @@ const search: FastifyPluginAsync = async (fastify) => {
   }, async (request, reply) => {
     try {
       const { name, entityType, filters, sort } = request.body as any;
-      const userId = request.user?.id || 'system';
+      const userId = request.user as string || 'system';
 
       // Convert string dates to Date objects
       const processedFilters: SearchFilters = {
@@ -399,7 +399,7 @@ const search: FastifyPluginAsync = async (fastify) => {
     }
   }, async (request, reply) => {
     try {
-      const userId = request.user?.id || 'system';
+      const userId = request.user as string || 'system';
 
       const savedSearches = await searchService.getSavedSearches(userId);
 

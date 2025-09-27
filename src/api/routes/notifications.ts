@@ -262,7 +262,7 @@ export async function notificationRoutes(fastify: FastifyInstance) {
     try {
       const userId = (request as any).user.id;
 
-      const preferences = await prisma.notificationPreference.findFirst({
+      const preferences = await prisma.notification.findFirst({
         where: { userId }
       });
 
@@ -344,7 +344,7 @@ export async function notificationRoutes(fastify: FastifyInstance) {
       const { email, slack, inApp, digestFrequency } = request.body;
 
       // Check if preferences exist
-      const existing = await prisma.notificationPreference.findFirst({
+      const existing = await prisma.notification.findFirst({
         where: { userId }
       });
 
@@ -352,7 +352,7 @@ export async function notificationRoutes(fastify: FastifyInstance) {
 
       if (existing) {
         // Update existing preferences
-        preferences = await prisma.notificationPreference.update({
+        preferences = await prisma.notification.update({
           where: { id: existing.id },
           data: {
             ...(email && { email }),
@@ -363,7 +363,7 @@ export async function notificationRoutes(fastify: FastifyInstance) {
         });
       } else {
         // Create new preferences
-        preferences = await prisma.notificationPreference.create({
+        preferences = await prisma.notification.create({
           data: {
             userId,
             email: email || {

@@ -1,6 +1,6 @@
 // Dashboard and Analytics Type Definitions
 
-import { Campaign, Task, TeamMember } from './index';
+import { Campaign, TeamMember } from './index';
 
 export interface DashboardMetrics {
   // Campaign metrics

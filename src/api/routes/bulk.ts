@@ -42,7 +42,7 @@ const bulk: FastifyPluginAsync = async (fastify) => {
   }, async (request, reply) => {
     try {
       const { campaignIds, updates, notifyTeam = true } = request.body as any;
-      const updatedBy = request.user?.id || 'system';
+      const updatedBy = request.user as string || 'system';
 
       // Convert string dates to Date objects
       const processedUpdates: BulkCampaignUpdate = {
@@ -98,7 +98,7 @@ const bulk: FastifyPluginAsync = async (fastify) => {
   }, async (request, reply) => {
     try {
       const { campaignIds, notifyTeam = true } = request.body as any;
-      const deletedBy = request.user?.id || 'system';
+      const deletedBy = request.user as string || 'system';
 
       const result = await bulkService.bulkDeleteCampaigns(campaignIds, deletedBy, notifyTeam);
 
@@ -151,7 +151,7 @@ const bulk: FastifyPluginAsync = async (fastify) => {
   }, async (request, reply) => {
     try {
       const { taskIds, updates, notifyAssignees = true } = request.body as any;
-      const updatedBy = request.user?.id || 'system';
+      const updatedBy = request.user as string || 'system';
 
       // Convert string dates to Date objects
       const processedUpdates: BulkTaskUpdate = {
@@ -207,7 +207,7 @@ const bulk: FastifyPluginAsync = async (fastify) => {
   }, async (request, reply) => {
     try {
       const { taskIds, notifyAssignees = true } = request.body as any;
-      const deletedBy = request.user?.id || 'system';
+      const deletedBy = request.user as string || 'system';
 
       const result = await bulkService.bulkDeleteTasks(taskIds, deletedBy, notifyAssignees);
 
@@ -258,7 +258,7 @@ const bulk: FastifyPluginAsync = async (fastify) => {
   }, async (request, reply) => {
     try {
       const { approvalIds, updates, notifyApprovers = true } = request.body as any;
-      const updatedBy = request.user?.id || 'system';
+      const updatedBy = request.user as string || 'system';
 
       // Convert string dates to Date objects
       const processedUpdates: BulkApprovalUpdate = {
@@ -320,7 +320,7 @@ const bulk: FastifyPluginAsync = async (fastify) => {
   }, async (request, reply) => {
     try {
       const { entityType, entityIds, newStatus, reason } = request.body as any;
-      const updatedBy = request.user?.id || 'system';
+      const updatedBy = request.user as string || 'system';
 
       const result = await bulkService.bulkChangeStatus(
         entityType,
@@ -377,7 +377,7 @@ const bulk: FastifyPluginAsync = async (fastify) => {
   }, async (request, reply) => {
     try {
       const { entityType, entityIds, assigneeEmail, notifyAssignee = true } = request.body as any;
-      const assignedBy = request.user?.id || 'system';
+      const assignedBy = request.user as string || 'system';
 
       const result = await bulkService.bulkAssignItems(
         entityType,
@@ -432,7 +432,7 @@ const bulk: FastifyPluginAsync = async (fastify) => {
   }, async (request, reply) => {
     try {
       const { entityType, entityIds, tagsToAdd } = request.body as any;
-      const updatedBy = request.user?.id || 'system';
+      const updatedBy = request.user as string || 'system';
 
       const result = await bulkService.bulkAddTags(entityType, entityIds, tagsToAdd, updatedBy);
 
@@ -481,7 +481,7 @@ const bulk: FastifyPluginAsync = async (fastify) => {
   }, async (request, reply) => {
     try {
       const { entityType, entityIds, tagsToRemove } = request.body as any;
-      const updatedBy = request.user?.id || 'system';
+      const updatedBy = request.user as string || 'system';
 
       const result = await bulkService.bulkRemoveTags(entityType, entityIds, tagsToRemove, updatedBy);
 

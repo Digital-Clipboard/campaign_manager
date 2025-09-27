@@ -420,7 +420,7 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
   });
 
   // Real-time dashboard WebSocket endpoint
-  fastify.get('/real-time', { websocket: true }, (connection, req) => {
+  fastify.get('/real-time', { websocket: true }, (connection, _req) => {
     logger.info('WebSocket connection established for real-time dashboard');
 
     // Send initial data
@@ -453,7 +453,7 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
     }, 30000); // Update every 30 seconds
 
     // Handle client messages
-    connection.socket.on('message', (message) => {
+    connection.socket.on('message', (message: any) => {
       try {
         const data = JSON.parse(message.toString());
         logger.info('Received WebSocket message', { data });
