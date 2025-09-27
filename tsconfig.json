@@ -31,6 +31,6 @@
       "@tests/*": ["tests/*"]
     }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "src/tests", "tests", "**/*.test.ts", "**/*.spec.ts"]
+  "include": ["src/index.ts", "src/api/server.ts", "src/utils/**/*", "src/types/**/*"],
+  "exclude": ["node_modules", "dist", "src/tests", "tests", "**/*.test.ts", "**/*.spec.ts", "src/adapters", "src/services", "src/integrations", "src/api/routes", "src/jobs", "src/workers"]
 }

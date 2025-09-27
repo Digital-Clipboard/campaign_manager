@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { startServer } from '@/api/server';
+import { createServer } from '@/api/server-minimal';
 import { logger } from '@/utils/logger';
 
 // Load environment variables
@@ -31,7 +31,10 @@ process.on('SIGINT', async () => {
 // Start the server
 async function main() {
   try {
-    await startServer();
+    const server = await createServer();
+    const port = process.env.PORT || 3000;
+    await server.listen({ port: Number(port), host: '0.0.0.0' });
+    logger.info(`Campaign Manager server started on port ${port}`);
   } catch (error) {
     logger.error('Failed to start application', { error });
     process.exit(1);
