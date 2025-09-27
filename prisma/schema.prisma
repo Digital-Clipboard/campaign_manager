@@ -1,0 +1,303 @@
+// Campaign Manager Database Schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Campaign {
+  id              String   @id @default(uuid())
+  name            String
+  type            String   // email_blast, product_launch, webinar, newsletter, custom
+  status          String   @default("planning") // planning, ready_for_review, needs_revision, approved, launched, completed, paused, cancelled
+  targetDate      DateTime
+  objectives      String[]
+  priority        String   @default("medium") // low, medium, high, critical
+  description     String?
+  budget          Float?
+  stakeholders    String[] // array of stakeholder identifiers
+  metadata        Json?    // flexible metadata storage
+  readinessScore  Int      @default(0) // 0-100
+  createdBy       String
+  updatedBy       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  timeline        Timeline?
+  tasks           Task[]
+  approvals       Approval[]
+  notifications   Notification[]
+  assets          Asset[]
+  team            CampaignTeamMember[]
+
+  @@map("campaigns")
+}
+
+model Timeline {
+  id              String   @id @default(uuid())
+  campaignId      String   @unique
+  template        String   // standard, webinar, product_launch, custom
+  milestones      Json     // array of milestone objects
+  criticalPath    String[] // task IDs on critical path
+  buffer          Int      // buffer time in hours
+  estimatedHours  Int      // total estimated work hours
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  campaign        Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@map("timelines")
+}
+
+model Task {
+  id              String    @id @default(uuid())
+  campaignId      String
+  title           String
+  description     String?
+  assigneeId      String?
+  dueDate         DateTime
+  priority        String    @default("medium") // low, medium, high, critical
+  status          String    @default("pending") // pending, assigned, in_progress, blocked, completed
+  dependencies    String[]  // array of task IDs
+  completedAt     DateTime?
+  blockedReason   String?
+  estimatedHours  Int       @default(1)
+  actualHours     Int       @default(0)
+  tags            String[]
+  milestoneId     String?   // reference to timeline milestone
+  templateTaskId  String?   // reference to template task that generated this
+  createdBy       String
+  updatedBy       String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  campaign        Campaign     @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  assignee        TeamMember?  @relation(fields: [assigneeId], references: [id])
+  comments        Comment[]
+  attachments     Attachment[]
+
+  @@index([campaignId, status])
+  @@index([assigneeId, dueDate])
+  @@index([status, dueDate])
+  @@index([milestoneId])
+  @@index([templateTaskId])
+  @@map("tasks")
+}
+
+model TeamMember {
+  id              String   @id @default(uuid())
+  email           String   @unique
+  name            String
+  role            String
+  skills          String[] // array of skill names
+  timezone        String   @default("UTC")
+  slackUserId     String?
+  availability    Json     // weekly schedule object
+  maxConcurrent   Int      @default(5)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  tasks           Task[]
+  approvals       Approval[]
+  campaigns       CampaignTeamMember[]
+  sentNotifications Notification[] @relation("NotificationSender")
+  receivedNotifications Notification[] @relation("NotificationRecipient")
+
+  @@map("team_members")
+}
+
+model CampaignTeamMember {
+  id              String   @id @default(uuid())
+  campaignId      String
+  memberId        String
+  role            String   // owner, contributor, reviewer, approver
+  joinedAt        DateTime @default(now())
+
+  // Relations
+  campaign        Campaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  member          TeamMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, memberId])
+  @@map("campaign_team_members")
+}
+
+model Approval {
+  id              String    @id @default(uuid())
+  campaignId      String
+  stage           String    // content, compliance, executive, final
+  approverId      String
+  status          String    @default("pending") // pending, approved, rejected, changes_requested
+  comments        String?
+  conditions      String[]  // array of approval conditions
+  decidedAt       DateTime?
+  deadline        DateTime
+  autoApprove     Boolean   @default(false)
+  autoApproveAt   DateTime?
+  urgency         String    @default("normal") // low, normal, high, critical
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  campaign        Campaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  approver        TeamMember @relation(fields: [approverId], references: [id])
+
+  @@unique([campaignId, stage, approverId])
+  @@index([status, deadline])
+  @@index([autoApprove, autoApproveAt])
+  @@map("approvals")
+}
+
+model Notification {
+  id              String    @id @default(uuid())
+  campaignId      String?
+  type            String    // task_assigned, task_reminder, approval_request, escalation, etc.
+  senderId        String?
+  recipientId     String
+  channel         String    // email, slack, in-app, sms
+  urgency         String    @default("normal") // low, normal, high, critical
+  subject         String?
+  message         String
+  payload         Json?     // additional data for notification
+  scheduledFor    DateTime  @default(now())
+  sentAt          DateTime?
+  readAt          DateTime?
+  retries         Int       @default(0)
+  maxRetries      Int       @default(3)
+  error           String?
+  createdAt       DateTime  @default(now())
+
+  // Relations
+  campaign        Campaign?   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  sender          TeamMember? @relation("NotificationSender", fields: [senderId], references: [id])
+  recipient       TeamMember  @relation("NotificationRecipient", fields: [recipientId], references: [id])
+
+  @@index([recipientId, sentAt])
+  @@index([scheduledFor, sentAt])
+  @@index([channel, sentAt])
+  @@map("notifications")
+}
+
+model Comment {
+  id              String   @id @default(uuid())
+  taskId          String
+  authorId        String
+  content         String
+  mentions        String[] // array of user IDs mentioned
+  isInternal      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  task            Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId, createdAt])
+  @@map("comments")
+}
+
+model Attachment {
+  id              String   @id @default(uuid())
+  taskId          String
+  filename        String
+  originalName    String
+  mimeType        String
+  size            Int      // file size in bytes
+  url             String
+  uploadedBy      String
+  createdAt       DateTime @default(now())
+
+  // Relations
+  task            Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@map("attachments")
+}
+
+model Asset {
+  id              String   @id @default(uuid())
+  campaignId      String
+  name            String
+  type            String   // image, video, document, template, etc.
+  filename        String
+  originalName    String
+  mimeType        String
+  size            Int      // file size in bytes
+  url             String
+  metadata        Json?    // additional asset metadata
+  version         Int      @default(1)
+  isActive        Boolean  @default(true)
+  uploadedBy      String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  campaign        Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId, type])
+  @@index([campaignId, isActive])
+  @@map("assets")
+}
+
+model Schedule {
+  id              String   @id @default(uuid())
+  campaignId      String?
+  title           String
+  type            String   // campaign_launch, milestone, meeting, deadline
+  startDate       DateTime
+  endDate         DateTime?
+  allDay          Boolean  @default(false)
+  recurring       Json?    // recurring pattern configuration
+  participants    String[] // array of team member IDs
+  location        String?
+  description     String?
+  reminders       Json?    // array of reminder configurations
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([startDate, endDate])
+  @@index([type, startDate])
+  @@map("schedules")
+}
+
+model Integration {
+  id              String   @id @default(uuid())
+  name            String   @unique // slack, mailjet, marketing_agent, etc.
+  type            String   // mcp_agent, webhook, api
+  config          Json     // integration configuration
+  status          String   @default("active") // active, inactive, error
+  lastSync        DateTime?
+  error           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("integrations")
+}
+
+model ActivityLog {
+  id              String   @id @default(uuid())
+  type            String   // campaign_status_change, task_assigned, etc.
+  entityType      String   // campaign, task, approval, etc.
+  entityId        String
+  action          String?  // created, updated, deleted, assigned, etc.
+  performedBy     String   // user who performed the action
+  actorId         String?  // backward compatibility
+  details         Json?    // action-specific details
+  changes         Json?    // before/after values
+  metadata        Json?    // additional context
+  ipAddress       String?
+  userAgent       String?
+  createdAt       DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([performedBy, createdAt])
+  @@index([type, createdAt])
+  @@index([createdAt])
+  @@map("activity_logs")
+}

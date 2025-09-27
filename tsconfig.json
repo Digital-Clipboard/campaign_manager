@@ -4,7 +4,6 @@
     "module": "commonjs",
     "lib": ["ES2022"],
     "outDir": "./dist",
-    "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -23,8 +22,15 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@tests/*": ["tests/*"]
+    }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "tests"]
+  "include": ["src/**/*", "tests/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

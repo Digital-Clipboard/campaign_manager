@@ -1,0 +1,124 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: campaign_manager
+      POSTGRES_USER: campaign_user
+      POSTGRES_PASSWORD: campaign_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - campaign_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U campaign_user -d campaign_manager"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching and queues
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - campaign_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Campaign Manager API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://campaign_user:campaign_pass@postgres:5432/campaign_manager
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: dev-jwt-secret-change-in-production
+      LOG_LEVEL: debug
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - campaign_network
+    command: pnpm dev
+
+  # Background Workers
+  workers:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://campaign_user:campaign_pass@postgres:5432/campaign_manager
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LOG_LEVEL: debug
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - campaign_network
+    command: pnpm workers
+
+  # Redis Commander (Redis GUI)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    networks:
+      - campaign_network
+    profiles:
+      - tools
+
+  # Adminer (Database GUI)
+  adminer:
+    image: adminer:latest
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - campaign_network
+    profiles:
+      - tools
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  campaign_network:
+    driver: bridge

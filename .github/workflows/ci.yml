@@ -1,0 +1,304 @@
+name: Campaign Manager CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  NODE_VERSION: '20'
+  POSTGRES_VERSION: '15'
+  REDIS_VERSION: '7'
+
+jobs:
+  # Lint and type check
+  lint:
+    name: Lint and Type Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Lint code
+        run: npm run lint
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Format check
+        run: npx prettier --check "src/**/*.ts"
+
+  # Unit tests
+  test-unit:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: campaign_manager_test
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/campaign_manager_test
+
+      - name: Run database migrations
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/campaign_manager_test
+
+      - name: Run unit tests
+        run: npm run test:unit
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/campaign_manager_test
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          JWT_SECRET: test-jwt-secret
+          LOG_LEVEL: silent
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/lcov.info
+          fail_ci_if_error: false
+
+  # Integration tests
+  test-integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: campaign_manager_test
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/campaign_manager_test
+
+      - name: Run database migrations
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/campaign_manager_test
+
+      - name: Seed test database
+        run: npm run db:seed
+        env:
+          DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/campaign_manager_test
+
+      - name: Run integration tests
+        run: npm run test:integration
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/campaign_manager_test
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          JWT_SECRET: test-jwt-secret
+          LOG_LEVEL: silent
+
+  # Security audit
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run security audit
+        run: npm audit --audit-level moderate
+
+      - name: Run dependency check
+        run: npx audit-ci --moderate
+
+  # Build and test Docker image
+  docker:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: [lint, test-unit]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: production
+          push: false
+          tags: campaign-manager:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Test Docker image
+        run: |
+          docker run --rm \
+            -e NODE_ENV=production \
+            -e DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy \
+            -e JWT_SECRET=test-secret \
+            campaign-manager:test \
+            node --version
+
+  # Deploy to staging (only on develop branch)
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [lint, test-unit, test-integration, security, docker]
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    environment: staging
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to staging
+        run: |
+          echo "Deploying to staging environment..."
+          # Add your staging deployment commands here
+          # This could involve:
+          # - Building and pushing Docker images
+          # - Deploying to cloud platforms
+          # - Running smoke tests
+
+  # Deploy to production (only on main branch)
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [lint, test-unit, test-integration, security, docker]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to production
+        run: |
+          echo "Deploying to production environment..."
+          # Add your production deployment commands here
+          # This should include:
+          # - Database migrations
+          # - Zero-downtime deployment
+          # - Health checks
+          # - Rollback procedures
+
+  # Performance tests (nightly)
+  performance:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run performance tests
+        run: |
+          echo "Running performance tests..."
+          # Add performance testing commands here
+          # Could use tools like Artillery, k6, or custom scripts

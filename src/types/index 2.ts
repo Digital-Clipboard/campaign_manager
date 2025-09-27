@@ -47,8 +47,6 @@ export interface Milestone {
   tasks: string[];
   phase?: string;
   estimatedHours?: number;
-  completedAt?: Date;
-  completionNotes?: string;
 }
 
 export interface Task {
@@ -88,18 +86,6 @@ export interface TeamMember {
   updatedAt: Date;
 }
 
-export interface TeamMemberWithWorkload extends TeamMember {
-  currentTasks: number;
-  utilization: number;
-  workload: {
-    totalTasks: number;
-    tasksByStatus: Record<string, number>;
-    tasksByPriority: Record<string, number>;
-    estimatedHours: number;
-    actualHours: number;
-  };
-}
-
 export interface WeeklySchedule {
   monday: DaySchedule;
   tuesday: DaySchedule;
@@ -129,21 +115,9 @@ export interface CampaignTeamMember {
 export interface Approval {
   id: string;
   campaignId: string;
-  campaign?: {
-    id: string;
-    name: string;
-    type: string;
-    status: string;
-    priority?: string;
-  };
   stage: 'content' | 'compliance' | 'executive' | 'final';
   approverId: string;
-  approver?: {
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-  };
+  approver: TeamMember;
   status: 'pending' | 'approved' | 'rejected' | 'changes_requested';
   comments?: string;
   conditions: string[];
@@ -155,11 +129,6 @@ export interface Approval {
   createdAt: Date;
   updatedAt: Date;
 }
-
-// Approval type aliases
-export type ApprovalStage = 'content' | 'compliance' | 'executive' | 'final';
-export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'changes_requested';
-export type ApprovalUrgency = 'low' | 'normal' | 'high' | 'critical';
 
 export interface Notification {
   id: string;
@@ -258,21 +227,6 @@ export interface UpdateCampaignDto {
   objectives?: string[];
 }
 
-export interface CreateTaskRequest {
-  campaignId: string;
-  title: string;
-  description?: string;
-  assigneeId?: string;
-  dueDate: Date;
-  priority?: Task['priority'];
-  dependencies?: string[];
-  estimatedHours?: number;
-  tags?: string[];
-  milestoneId?: string;
-  templateTaskId?: string;
-  autoAssign?: boolean;
-}
-
 export interface CreateTaskDto {
   campaignId: string;
   title: string;
@@ -283,45 +237,6 @@ export interface CreateTaskDto {
   dependencies?: string[];
   estimatedHours?: number;
   tags?: string[];
-}
-
-export interface UpdateTaskRequest {
-  title?: string;
-  description?: string;
-  assigneeId?: string;
-  dueDate?: Date;
-  priority?: Task['priority'];
-  status?: Task['status'];
-  blockedReason?: string;
-  actualHours?: number;
-  tags?: string[];
-}
-
-// Approval request/response types
-export interface CreateApprovalRequest {
-  campaignId: string;
-  stage: ApprovalStage;
-  approverId: string;
-  urgency?: ApprovalUrgency;
-  autoApprove?: boolean;
-  conditions?: string[];
-}
-
-export interface ApprovalDecision {
-  decision: 'approve' | 'reject' | 'request_changes';
-  comments: string;
-  conditions?: string[];
-}
-
-export interface ApprovalFilters {
-  page?: number;
-  pageSize?: number;
-  campaignId?: string;
-  approverId?: string;
-  status?: ApprovalStatus;
-  urgency?: ApprovalUrgency;
-  stage?: ApprovalStage;
-  overdue?: boolean;
 }
 
 export interface UpdateTaskDto {
@@ -366,8 +281,6 @@ export interface CampaignWithRelations extends Campaign {
 }
 
 export interface TaskFilters {
-  page?: number;
-  pageSize?: number;
   campaignId?: string;
   assigneeId?: string;
   status?: Task['status'];
@@ -375,39 +288,8 @@ export interface TaskFilters {
   dueFrom?: string;
   dueTo?: string;
   overdue?: boolean;
-  search?: string;
-  sortBy?: 'createdAt' | 'dueDate' | 'title' | 'priority' | 'status';
-  sortOrder?: 'asc' | 'desc';
-}
-
-export interface TaskWithRelations extends Task {
-  assignee?: TeamMember;
-  campaign?: {
-    id: string;
-    name: string;
-    type: string;
-    status: string;
-    targetDate?: Date;
-  };
-  comments?: (Comment & {
-    author?: {
-      id: string;
-      name: string;
-      email: string;
-    };
-  })[];
-  attachments?: Attachment[];
-  _count?: {
-    comments: number;
-    attachments: number;
-  };
-}
-
-export interface TaskAssignmentResult {
-  assigneeId: string;
-  assigneeName: string;
-  confidence: number;
-  reasoning: string;
+  page?: number;
+  limit?: number;
 }
 
 export interface PaginatedResult<T> {
@@ -486,171 +368,4 @@ export interface APIError {
   timestamp: string;
   requestId: string;
   details?: any;
-}
-
-// Timeline types
-export interface CreateTimelineRequest {
-  campaignId: string;
-  template: string;
-  targetDate: Date;
-  customRequirements?: Record<string, any>;
-}
-
-export interface TimelineTemplate {
-  name: string;
-  type: string;
-  description: string;
-  duration: number; // in days
-  phases: TimelinePhase[];
-  tasks: TaskTemplate[];
-}
-
-export interface TimelinePhase {
-  name: string;
-  duration: number; // in days
-  startOffset: number; // days from campaign start
-  tasks: string[]; // task IDs
-  description?: string;
-}
-
-export interface TaskTemplate {
-  id: string;
-  title: string;
-  description: string;
-  estimatedHours: number;
-  dependencies: string[];
-  skills: string[];
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  phase?: string;
-  category?: string;
-}
-
-// Team Management types
-export interface CreateTeamMemberRequest {
-  email: string;
-  name: string;
-  role: string;
-  skills?: string[];
-  timezone?: string;
-  slackUserId?: string;
-  availability?: WeeklySchedule;
-  maxConcurrent?: number;
-}
-
-export interface UpdateTeamMemberRequest {
-  name?: string;
-  role?: string;
-  skills?: string[];
-  timezone?: string;
-  slackUserId?: string;
-  availability?: WeeklySchedule;
-  maxConcurrent?: number;
-  isActive?: boolean;
-}
-
-export interface TeamMemberFilters {
-  page?: number;
-  pageSize?: number;
-  role?: string;
-  skills?: string[];
-  isActive?: boolean;
-  search?: string;
-  sortBy?: 'name' | 'role' | 'createdAt' | 'email';
-  sortOrder?: 'asc' | 'desc';
-}
-
-export interface TeamAvailabilityResponse {
-  available: TeamMemberAvailability[];
-  unavailable: TeamMemberAvailability[];
-  partiallyAvailable: TeamMemberAvailability[];
-  overloaded: TeamMemberAvailability[];
-  summary: {
-    totalMembers: number;
-    availableMembers: number;
-    averageUtilization: number;
-    totalCapacityHours: number;
-    totalUsedHours: number;
-  };
-}
-
-export interface TeamMemberAvailability {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  skills: string[];
-  currentTasks: number;
-  maxConcurrent: number;
-  utilization: number;
-  capacityHours: number;
-  usedHours: number;
-  availability: WeeklySchedule;
-  overloadedBy?: number;
-}
-
-export interface TeamPerformanceMetrics {
-  overall: {
-    totalMembers: number;
-    activeMembers: number;
-    averageUtilization: number;
-    totalTasksCompleted: number;
-    averageTaskCompletionTime: number;
-    onTimeDeliveryRate: number;
-  };
-  members: TeamMemberPerformance[];
-  trends: {
-    utilizationTrend: number; // percentage change
-    completionTimeTrend: number; // percentage change
-    onTimeDeliveryTrend: number; // percentage change
-  };
-}
-
-export interface TeamMemberPerformance {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  tasksCompleted: number;
-  tasksInProgress: number;
-  tasksOverdue: number;
-  averageCompletionTime: number;
-  utilizationRate: number;
-  onTimeDeliveryRate: number;
-  skillsUtilized: string[];
-}
-
-export interface BulkUpdateTeamAvailabilityRequest {
-  updates: {
-    memberId: string;
-    availability: WeeklySchedule;
-  }[];
-}
-
-export interface TeamWorkloadDistribution {
-  member: {
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-    maxConcurrent: number;
-  };
-  currentLoad: {
-    totalTasks: number;
-    tasksByStatus: Record<string, number>;
-    tasksByPriority: Record<string, number>;
-    estimatedHours: number;
-    actualHours: number;
-  };
-  capacity: {
-    maxTasks: number;
-    availableSlots: number;
-    utilizationPercentage: number;
-    weeklyCapacity: number;
-    usedCapacity: number;
-  };
-  recommendations: {
-    canTakeMoreTasks: boolean;
-    suggestedTaskTypes: string[];
-    overloadWarning?: string;
-  };
 }

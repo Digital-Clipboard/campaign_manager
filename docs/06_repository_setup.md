@@ -645,14 +645,15 @@ JWT_SECRET=your_jwt_secret_here
 JWT_EXPIRES_IN=7d
 
 # External Services
-SLACK_MANAGER_URL=http://localhost:3002
+SLACK_MANAGER_URL=https://slack-manager-dd799df0638b.herokuapp.com
 MARKETING_AGENT_URL=http://localhost:3000
 MAILJET_AGENT_URL=http://localhost:3003
 
-# Slack
+# Slack Integration
+SLACK_MCP_API_KEY=dev-slack-manager-key
+SLACK_TRACTION_CHANNEL_ID=C011CEK2406
+SLACK_TRACTION_CHANNEL_NAME=_traction
 SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
-SLACK_APP_TOKEN=xapp-1-YOUR-TOKEN
-SLACK_BOT_TOKEN=xoxb-YOUR-TOKEN
 
 # CORS
 CORS_ORIGIN=http://localhost:3000,http://localhost:3001
