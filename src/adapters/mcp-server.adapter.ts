@@ -153,7 +153,7 @@ export class MCPServerAdapter {
     this.approvalService = new ApprovalService(this.prisma, this.cacheService);
     this.dashboardService = new DashboardService(this.prisma, this.cacheService);
     this.analyticsService = new AnalyticsService(this.prisma, this.cacheService);
-    this.notificationService = new NotificationService(this.prisma, this.cacheService);
+    this.notificationService = new NotificationService(this.prisma);
   }
 
   registerMCPEndpoint(fastify: FastifyInstance) {
@@ -188,7 +188,7 @@ export class MCPServerAdapter {
 
           case 'updateCampaignStatus': {
             const validated = UpdateCampaignStatusRequest.parse(params);
-            result = await this.campaignService.updateStatus(
+            result = await this.campaignService.updateCampaignStatus(
               validated.campaignId,
               validated.status,
               'mcp-user'
@@ -205,11 +205,11 @@ export class MCPServerAdapter {
           case 'listCampaigns': {
             const validated = ListCampaignsRequest.parse(params);
             result = await this.campaignService.listCampaigns({
-              status: validated.status,
-              priority: validated.priority,
-              type: validated.type,
-              limit: validated.limit,
-              offset: validated.offset
+              status: validated.status as any,
+              priority: validated.priority as any,
+              type: validated.type as any,
+              pageSize: validated.limit,
+              page: Math.floor(validated.offset / validated.limit) + 1
             });
             break;
           }
@@ -217,10 +217,7 @@ export class MCPServerAdapter {
           // Task Management Tools
           case 'createTask': {
             const validated = CreateTaskRequest.parse(params);
-            result = await this.taskService.createTask({
-              ...validated,
-              createdBy: 'mcp-user'
-            });
+            result = await this.taskService.createTask(validated, 'mcp-user');
             break;
           }
 
@@ -229,7 +226,7 @@ export class MCPServerAdapter {
             result = await this.taskService.assignTask(
               validated.taskId,
               validated.assigneeId,
-              validated.notify
+              'mcp-user'
             );
             break;
           }
@@ -246,9 +243,8 @@ export class MCPServerAdapter {
                 priority: task.priority as any,
                 assigneeId: task.assigneeId,
                 estimatedHours: task.estimatedHours || 1,
-                tags: task.tags,
-                createdBy: 'mcp-user'
-              });
+                tags: task.tags
+              }, 'mcp-user');
               tasks.push(created);
             }
             result = { tasks, count: tasks.length };
