@@ -29,7 +29,7 @@ async function generateWeeklySummary() {
   console.log(`🗓️  Generating weekly summary for Week ${weekNumber}, ${year}`);
 
   try {
-    const response = await axios.post('http://localhost:${process.env.PORT || 3000}/mcp', {
+    const response = await axios.post(`http://localhost:${process.env.PORT || 3000}/mcp`, {
       tool: 'generateWeeklySummary',
       params: {
         weekNumber,
