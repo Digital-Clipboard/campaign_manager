@@ -5,8 +5,10 @@ import { CampaignService } from '@/services/campaign/campaign.service';
 import { logger } from '@/utils/logger';
 
 const templates: FastifyPluginAsync = async (fastify) => {
-  const templateService = new TemplateService();
-  const campaignService = new CampaignService();
+  const prisma = (fastify as any).prisma;
+  const cache = (fastify as any).cache;
+  const templateService = new TemplateService(prisma, cache);
+  const campaignService = new CampaignService(prisma, cache);
 
   // GET /templates - List all templates
   fastify.get('/', {
@@ -58,7 +60,7 @@ const templates: FastifyPluginAsync = async (fastify) => {
       if (isPublic !== undefined) filters.isPublic = isPublic;
       if (search) filters.search = search;
 
-      const result = await templateService.listTemplates(filters, { page, limit });
+      const result = await templateService.listTemplates(filters, limit, (page - 1) * limit);
 
       reply.send({
         success: true,

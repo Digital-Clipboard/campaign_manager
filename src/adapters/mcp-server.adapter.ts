@@ -160,7 +160,6 @@ export class MCPServerAdapter {
     // Main MCP endpoint that handles all tool calls
     fastify.post('/mcp', {
       schema: {
-        description: 'MCP (Model Context Protocol) endpoint for Campaign Manager tools',
         body: {
           type: 'object',
           properties: {
@@ -182,7 +181,16 @@ export class MCPServerAdapter {
           // Campaign Management Tools
           case 'createCampaign': {
             const validated = CreateCampaignRequest.parse(params);
-            result = await this.campaignService.createCampaign(validated, 'mcp-user');
+            result = await this.campaignService.createCampaign({
+              name: validated.name,
+              type: validated.type,
+              targetDate: validated.targetDate,
+              objectives: validated.objectives,
+              priority: validated.priority,
+              description: validated.description,
+              budget: validated.budget,
+              stakeholders: validated.stakeholders
+            }, 'mcp-user');
             break;
           }
 
@@ -217,7 +225,16 @@ export class MCPServerAdapter {
           // Task Management Tools
           case 'createTask': {
             const validated = CreateTaskRequest.parse(params);
-            result = await this.taskService.createTask(validated, 'mcp-user');
+            result = await this.taskService.createTask({
+              campaignId: validated.campaignId,
+              title: validated.title,
+              description: validated.description,
+              dueDate: validated.dueDate,
+              priority: validated.priority,
+              assigneeId: validated.assigneeId,
+              estimatedHours: validated.estimatedHours,
+              tags: validated.tags
+            }, 'mcp-user');
             break;
           }
 
@@ -264,8 +281,14 @@ export class MCPServerAdapter {
           // Team Management Tools
           case 'getTeamAvailability': {
             const validated = GetTeamAvailabilityRequest.parse(params);
+            // Use the provided date as start, and add 7 days for end date
+            const startDate = validated.date;
+            const endDate = new Date(startDate);
+            endDate.setDate(endDate.getDate() + 7);
+
             result = await this.teamService.getTeamAvailability(
-              validated.date ? new Date(validated.date) : new Date(),
+              startDate,
+              endDate,
               validated.skills || []
             );
             break;
@@ -323,7 +346,10 @@ export class MCPServerAdapter {
           case 'getDashboardMetrics': {
             const validated = GetDashboardMetricsRequest.parse(params);
             result = await this.dashboardService.getOverviewMetrics({
-              dateRange: validated.dateRange,
+              dateRange: validated.dateRange ? {
+                startDate: validated.dateRange.startDate,
+                endDate: validated.dateRange.endDate
+              } : undefined,
               ...validated.filters
             });
             break;
@@ -348,7 +374,10 @@ export class MCPServerAdapter {
             const exportData = await this.analyticsService.exportDashboard({
               format: validated.format,
               sections: validated.sections,
-              dateRange: validated.dateRange,
+              dateRange: {
+                startDate: validated.dateRange.startDate,
+                endDate: validated.dateRange.endDate
+              },
               includeCharts: false
             });
             result = {

@@ -258,12 +258,14 @@ export async function notificationRoutes(fastify: FastifyInstance) {
   });
 
   // GET /notifications/preferences - Get notification preferences
+  // TODO: Implement NotificationPreferences model
+  /* Commented out - needs NotificationPreferences model
   fastify.get('/preferences', async (request: FastifyRequest, reply: FastifyReply) => {
     try {
       const userId = (request as any).user.id;
 
       const preferences = await prisma.notification.findFirst({
-        where: { userId }
+        where: { recipientId: userId }
       });
 
       if (!preferences) {
@@ -314,8 +316,10 @@ export async function notificationRoutes(fastify: FastifyInstance) {
       });
     }
   });
+  */
 
   // PUT /notifications/preferences - Update notification preferences
+  /* Commented out - needs NotificationPreferences model
   fastify.put('/preferences', async (request: FastifyRequest<{
     Body: {
       email?: {
@@ -408,6 +412,7 @@ export async function notificationRoutes(fastify: FastifyInstance) {
       });
     }
   });
+  */
 
   // POST /notifications/test - Send test notification
   fastify.post('/test', async (request: FastifyRequest<{
