@@ -33,6 +33,7 @@ model Campaign {
   notifications   Notification[]
   assets          Asset[]
   team            CampaignTeamMember[]
+  schedules       CampaignSchedule[]
 
   @@map("campaigns")
 }
@@ -300,4 +301,46 @@ model ActivityLog {
   @@index([type, createdAt])
   @@index([createdAt])
   @@map("activity_logs")
+}
+
+model CampaignSchedule {
+  id              String   @id @default(uuid())
+  weekNumber      Int      // ISO week number
+  year            Int
+  campaignId      String?
+  dayOfWeek       String   // monday, tuesday, wednesday, etc.
+  scheduledDate   DateTime
+  time            String   // HH:MM format
+  activityType    String   // launch, milestone, review, preparation
+  name            String
+  roundNumber     Int?
+  recipientCount  Int?
+  segment         String?
+  details         String?
+  status          String   @default("scheduled") // scheduled, in_progress, completed, cancelled
+  metadata        Json?    // additional activity metadata
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  campaign        Campaign? @relation(fields: [campaignId], references: [id])
+
+  @@unique([weekNumber, year, scheduledDate, time])
+  @@index([weekNumber, year])
+  @@index([scheduledDate])
+  @@index([status])
+  @@map("campaign_schedules")
+}
+
+model DashboardAccess {
+  id              String   @id @default(uuid())
+  name            String   // Team member name
+  email           String   @unique
+  accessToken     String   @unique // Unique login token
+  lastAccess      DateTime?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("dashboard_access")
 }

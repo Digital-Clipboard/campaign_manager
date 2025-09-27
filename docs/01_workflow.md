@@ -452,3 +452,246 @@ await slackClient.callTool('send_direct_message', {
 2. Marketing Agent receives handoff notification
 3. Campaign execution begins
 4. Marketing Agent posts performance results back to #_traction
+
+## 8. Weekly Summary Workflow
+
+### Overview
+The Campaign Manager automatically generates comprehensive weekly summaries every Monday at 0600 UTC, providing stakeholders with a complete overview of the week's scheduled campaign activities.
+
+### Weekly Summary Generation
+
+#### Trigger Schedule
+```typescript
+// Cron schedule for weekly summaries
+const WEEKLY_SUMMARY_SCHEDULE = '0 6 * * 1'; // Every Monday at 06:00 UTC
+
+interface WeeklySummaryConfig {
+  schedule: string;
+  channel: string;
+  dashboardUrl: string;
+  lookAheadDays: number;
+  includeMetrics: boolean;
+}
+
+const config: WeeklySummaryConfig = {
+  schedule: WEEKLY_SUMMARY_SCHEDULE,
+  channel: '#traction',
+  dashboardUrl: process.env.DASHBOARD_URL || 'https://campaign-manager.herokuapp.com/dashboard',
+  lookAheadDays: 7,
+  includeMetrics: true
+};
+```
+
+#### Summary Components
+
+##### 1. Week Overview
+- Current week number and date range
+- Total campaigns scheduled
+- Total emails to be sent
+- Key milestones for the week
+
+##### 2. Campaign Schedule
+```typescript
+interface WeeklyCampaignSchedule {
+  monday: CampaignActivity[];
+  tuesday: CampaignActivity[];
+  wednesday: CampaignActivity[];
+  thursday: CampaignActivity[];
+  friday: CampaignActivity[];
+  saturday: CampaignActivity[];
+  sunday: CampaignActivity[];
+}
+
+interface CampaignActivity {
+  time: string;
+  campaignName: string;
+  roundNumber: number;
+  recipientCount: number;
+  type: 'launch' | 'milestone' | 'review' | 'preparation';
+  status: 'scheduled' | 'in_progress' | 'completed';
+}
+```
+
+##### 3. Key Metrics Forecast
+- Expected total reach
+- Projected engagement rates
+- Resource allocation
+- Capacity utilization
+
+### Slack Notification Format
+
+#### Weekly Summary Message Structure
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+WEEKLY CAMPAIGN SCHEDULE
+Week 42 • Oct 14-20, 2025
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 WEEK AT A GLANCE
+• Campaigns: 3 active
+• Total Recipients: 45,000
+• Key Launches: 2
+• Review Meetings: 4
+
+📅 MONDAY, OCT 14
+○ 10:00 AM - Product Launch Email (Round 1)
+  Target: 15,000 users • Segment: Early Adopters
+
+📅 TUESDAY, OCT 15
+○ 2:00 PM - Content Review Meeting
+  Campaign: Winter Newsletter
+
+📅 WEDNESDAY, OCT 16
+● 10:00 AM - Feature Announcement (Round 2)
+  Target: 20,000 users • Segment: Active Users
+○ 3:00 PM - Pre-flight Check
+  Campaign: Webinar Invitation
+
+📅 THURSDAY, OCT 17
+○ 9:00 AM - Webinar Invitation Launch
+  Target: 10,000 users • Segment: Enterprise
+
+📅 FRIDAY, OCT 18
+○ 11:00 AM - Performance Review
+  Reviewing: Week's campaign metrics
+
+🎯 KEY MILESTONES THIS WEEK
+✓ Product launch sequence completion
+○ Q4 campaign kickoff
+○ Webinar registration open
+
+📈 PERFORMANCE TRACKING
+Last Week's Results:
+• Emails Sent: 42,500
+• Avg Open Rate: 24.3%
+• Avg Click Rate: 3.2%
+• Best Performer: Feature Update (28% open)
+
+🔗 View Full Schedule Dashboard
+[Click here for detailed campaign calendar]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### Dashboard Integration
+
+#### Campaign Schedule Dashboard
+The weekly summary includes a link to a dedicated web dashboard providing:
+
+##### Dashboard Features
+1. **Calendar View**
+   - Interactive weekly/monthly calendar
+   - Campaign timeline visualization
+   - Drill-down to individual campaigns
+
+2. **Campaign Details Panel**
+   - Full campaign information
+   - Team assignments
+   - Asset links
+   - Approval status
+   - Technical configuration
+
+3. **Real-time Updates**
+   - WebSocket connection for live status
+   - Progress indicators
+   - Completion notifications
+
+4. **Metrics Overview**
+   - Historical performance data
+   - Trend analysis
+   - Comparative metrics
+
+##### Dashboard URL Structure
+```typescript
+interface DashboardRoutes {
+  weekly: '/dashboard/schedule/week/:weekNumber';
+  daily: '/dashboard/schedule/day/:date';
+  campaign: '/dashboard/campaigns/:campaignId';
+  metrics: '/dashboard/metrics/:dateRange';
+}
+```
+
+### Automation Rules
+
+#### Smart Summary Generation
+```typescript
+interface SummaryGenerationRules {
+  // Include campaigns based on status
+  includeStatuses: ['scheduled', 'in_progress', 'launching'];
+
+  // Highlight criteria
+  highlightCriteria: {
+    largeCampaigns: { recipientCount: { min: 10000 } };
+    criticalMilestones: true;
+    upcomingDeadlines: { hoursAhead: 24 };
+    performanceAlerts: true;
+  };
+
+  // Formatting preferences
+  formatting: {
+    useStatusIndicators: true;
+    includeProgressBars: false;
+    showTeamAssignments: true;
+    maxCampaignsPerDay: 5;
+  };
+}
+```
+
+#### Notification Delivery
+```typescript
+async function generateWeeklySummary(): Promise<void> {
+  const weekData = await aggregateWeeklyData();
+  const summary = formatWeeklySummary(weekData);
+
+  // Post to Slack
+  await slackClient.postMessage({
+    channel: '#traction',
+    blocks: summary.blocks,
+    unfurl_links: false,
+    unfurl_media: false
+  });
+
+  // Log dashboard URL for tracking
+  logger.info('Weekly summary posted', {
+    week: weekData.weekNumber,
+    campaignCount: weekData.campaigns.length,
+    dashboardUrl: summary.dashboardUrl
+  });
+}
+```
+
+### Integration with Existing Workflows
+
+#### Data Sources
+1. **Campaign Service**: Active campaigns and schedules
+2. **Task Service**: Upcoming milestones and deadlines
+3. **Notification Service**: Scheduled notifications
+4. **Analytics Service**: Historical performance data
+5. **Team Service**: Resource availability
+
+#### Update Triggers
+The weekly summary is automatically regenerated when:
+- New campaigns are scheduled
+- Campaign dates are modified
+- Campaigns are cancelled or postponed
+- Major milestones are completed
+
+### Success Metrics
+
+#### Summary Effectiveness KPIs
+- Click-through rate to dashboard
+- Time spent on dashboard
+- Team preparedness scores
+- Campaign on-time launch rate
+- Stakeholder engagement metrics
+
+### Error Handling
+
+#### Fallback Mechanisms
+```typescript
+interface SummaryErrorHandling {
+  retryAttempts: 3;
+  retryDelay: 300000; // 5 minutes
+  fallbackChannel: '#campaign-alerts';
+  notifyOnError: ['campaign-manager@company.com'];
+  manualTriggerEndpoint: '/api/summary/generate';
+}
