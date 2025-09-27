@@ -251,7 +251,7 @@ jobs:
         uses: anthropics/claude-code-review-action@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          claude-api-key: ${{ secrets.CLAUDE_API_KEY }}
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           review-level: 'thorough'
           focus-areas: 'security,performance,best-practices'
 
