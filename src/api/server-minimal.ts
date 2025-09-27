@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
+import { CampaignSlackNotifications } from '../services/slack/campaign-notifications';
 
 // Extend FastifyRequest type to include startTime
 declare module 'fastify' {
@@ -1010,6 +1011,119 @@ export async function createServer() {
           }
         }
 
+        case 'generateWeeklySummary': {
+          const { weekNumber, year } = params;
+
+          if (!weekNumber || !year) {
+            return {
+              success: false,
+              error: 'Missing required fields: weekNumber, year'
+            };
+          }
+
+          try {
+            // Get week schedule
+            const scheduleData = await prisma.campaignSchedule.findMany({
+              where: {
+                weekNumber: parseInt(weekNumber),
+                year: parseInt(year)
+              },
+              orderBy: [
+                { scheduledDate: 'asc' }
+              ]
+            });
+
+            if (scheduleData.length === 0) {
+              return {
+                success: false,
+                error: `No activities found for week ${weekNumber} of ${year}`
+              };
+            }
+
+            // Initialize Slack notifications service
+            const slackNotifications = new CampaignSlackNotifications();
+
+            // Calculate date range for the week
+            const firstDate = scheduleData[0].scheduledDate;
+            const lastDate = scheduleData[scheduleData.length - 1].scheduledDate;
+            const dateRange = firstDate.toDateString() === lastDate.toDateString()
+              ? firstDate.toDateString()
+              : `${firstDate.toDateString()} - ${lastDate.toDateString()}`;
+
+            // Group activities by day
+            const campaignsByDay = scheduleData.reduce((acc, activity) => {
+              const day = activity.dayOfWeek;
+              if (!acc[day]) {
+                acc[day] = [];
+              }
+              acc[day].push({
+                time: activity.time,
+                name: activity.name,
+                type: activity.activityType === 'Product Release' ? 'launch' : 'milestone',
+                details: (activity.metadata as any)?.description || (activity.metadata as any)?.theme || activity.activityType,
+                recipientCount: 0, // Will be populated when we have real campaign data
+                status: activity.status === 'scheduled' ? 'pending' : (activity.status || 'pending')
+              });
+              return acc;
+            }, {} as Record<string, any[]>);
+
+            // Transform to expected format
+            const campaigns = Object.entries(campaignsByDay).map(([day, activities]) => ({
+              day,
+              activities
+            }));
+
+            // Calculate metrics
+            const metrics = {
+              totalCampaigns: scheduleData.length,
+              totalRecipients: 0, // Will be calculated from real campaign data
+              keyLaunches: scheduleData.filter(a => a.activityType === 'Product Release').length,
+              reviewMeetings: scheduleData.filter(a => a.name.toLowerCase().includes('review')).length
+            };
+
+            // Create milestones array with correct interface
+            const milestones = scheduleData
+              .filter(a => a.activityType === 'Product Release')
+              .map(a => ({
+                status: 'pending' as const, // All future activities are pending
+                description: `${a.name} - ${(a.metadata as any)?.description || a.activityType}`
+              }));
+
+            const weekSummaryData = {
+              weekNumber: parseInt(weekNumber),
+              dateRange,
+              campaigns,
+              metrics,
+              milestones,
+              dashboardUrl: `${process.env.DASHBOARD_URL || 'https://campaign-dashboard.vercel.app'}/week/${weekNumber}/${year}`
+            };
+
+            // For now, skip Slack notification creation and return the data directly
+            return {
+              success: true,
+              message: 'Weekly summary generated successfully',
+              weekNumber: parseInt(weekNumber),
+              year: parseInt(year),
+              activitiesCount: scheduleData.length,
+              weekSummaryData,
+              rawScheduleData: scheduleData.map(s => ({
+                name: s.name,
+                dayOfWeek: s.dayOfWeek,
+                time: s.time,
+                activityType: s.activityType,
+                status: s.status
+              }))
+            };
+
+          } catch (error) {
+            logger.error('Error generating weekly summary', { error: error.message });
+            return {
+              success: false,
+              error: `Failed to generate weekly summary: ${error.message}`
+            };
+          }
+        }
+
         case 'initializeDashboardAccess': {
           const teamMembers = [
             { name: 'John Kelly', email: 'john.kelly@company.com' },
@@ -1118,7 +1232,7 @@ export async function createServer() {
               'assignTaskToMember', 'addTeamMemberToCampaign',
               'searchMailjetCampaigns', 'getMailjetCampaignStats', 'listMailjetCampaigns',
               'sendSlackNotification',
-              'scheduleActivity', 'getWeekSchedule', 'updateActivityStatus', 'initializeDashboardAccess'
+              'scheduleActivity', 'getWeekSchedule', 'updateActivityStatus', 'generateWeeklySummary', 'initializeDashboardAccess'
             ]
           };
       }

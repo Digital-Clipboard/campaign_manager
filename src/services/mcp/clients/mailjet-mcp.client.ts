@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
 import jwt from 'jsonwebtoken';
-import { logger } from '@/utils/logger';
-import { CacheService } from '@/services/cache/cache.service';
+import { logger } from '../../../utils/logger';
+import { CacheService } from '../../cache/cache.service';
 
 export interface MailjetCampaignStats {
   campaignId: string;
