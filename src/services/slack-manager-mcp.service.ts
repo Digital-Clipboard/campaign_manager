@@ -53,7 +53,7 @@ export class SlackManagerMCPService {
         return { error: `HTTP ${response.status}: ${response.statusText}` };
       }
 
-      const data = await response.json();
+      const data: any = await response.json();
       return data;
     } catch (error) {
       logger.error('Error calling Slack Manager MCP service', {
@@ -83,7 +83,7 @@ export class SlackManagerMCPService {
   async sendMessage(options: SlackMessageOptions): Promise<boolean> {
     const { channel, text, blocks } = options;
 
-    // First, get the channel ID if we have a channel name
+    // Get channel ID if we have a channel name
     let channelId = channel;
     if (channel.startsWith('#')) {
       channelId = await this.getChannelId(channel);
@@ -93,11 +93,10 @@ export class SlackManagerMCPService {
       }
     }
 
-    // IMPORTANT: Following Stripe Health Monitor pattern - send only text, no blocks
-    // The Slack Manager MCP endpoint handles markdown-formatted text better than Block Kit
+    // Send the message with channel_id
     const messageParams: any = {
       channel_id: channelId,
-      text: text  // Send only the text, no blocks - let Slack handle markdown formatting
+      text: text
     };
 
     const response = await this.callMCPTool('send_message', messageParams);
@@ -114,7 +113,7 @@ export class SlackManagerMCPService {
     logger.info('Slack message sent successfully', {
       channel,
       channelId,
-      messageId: response.result?.ts
+      response: response.result
     });
 
     return true;
