@@ -100,33 +100,13 @@ async function realPostLaunchAssessment() {
       console.log(`   Spam: ${stats.SpamComplaintCount}`);
       console.log(`   Unsubscribed: ${stats.UnsubscribedCount}\n`);
 
-      // Fetch detailed bounce information
-      let hardBounceCount = 0;
-      let softBounceCount = 0;
+      // Get hard/soft bounce counts directly from campaign statistics API
+      // The campaignstatistics endpoint provides HardBouncedCount and SoftBouncedCount
+      const hardBounceCount = stats.HardBouncedCount || 0;
+      const softBounceCount = stats.SoftBouncedCount || 0;
 
-      try {
-        const bouncesResponse = await mailjet
-          .get('messagestatistics', { version: 'v3' })
-          .request({
-            CampaignID: campaign.ID,
-            Limit: 1000
-          });
-
-        const messages = bouncesResponse.body.Data;
-
-        // Count hard vs soft bounces
-        messages.forEach((msg: any) => {
-          if (msg.Status === 'hardbounced') hardBounceCount++;
-          if (msg.Status === 'softbounced') softBounceCount++;
-        });
-
-        console.log(`   Hard Bounces: ${hardBounceCount}`);
-        console.log(`   Soft Bounces: ${softBounceCount}`);
-      } catch (error) {
-        console.log(`   ⚠️  Could not fetch detailed bounce info, using estimates`);
-        hardBounceCount = Math.round(stats.BouncedCount * 0.6);
-        softBounceCount = stats.BouncedCount - hardBounceCount;
-      }
+      console.log(`   Hard Bounces: ${hardBounceCount}`);
+      console.log(`   Soft Bounces: ${softBounceCount}`);
 
       return {
         sent: stats.DeliveredCount + stats.BouncedCount,
