@@ -343,66 +343,59 @@ export class CampaignSlackNotifications {
 
     const blocks: any[] = [
       {
-        type: 'divider'
-      },
-      {
         type: 'header',
         text: {
           type: 'plain_text',
-          text: '📊 POST-LAUNCH REPORT (15 MIN)'
+          text: 'POST-LAUNCH REPORT (15 MIN)'
         }
       },
       {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `*${data.campaignName} - Round ${data.roundNumber}*\n\n` +
-                `${this.STATUS_INDICATORS.active} *Campaign distribution in progress*`
+          text: `*${data.campaignName} - Round ${data.roundNumber}*\n● Campaign distribution complete`
+        }
+      },
+      {
+        type: 'divider'
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '*Distribution Progress*'
         }
       },
       {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: '*Distribution Progress:*'
+          text: '```' +
+                `Sent:         ${progress.sent.toLocaleString()} / ${progress.total.toLocaleString()} (${progressPercentage}%)\n` +
+                `Time Elapsed: ${progress.timeElapsed}` +
+                '```'
         }
       },
       {
-        type: 'section',
-        fields: [
-          {
-            type: 'mrkdwn',
-            text: `*Sent:* ${progress.sent.toLocaleString()} / ${progress.total.toLocaleString()} (${progressPercentage}%)`
-          },
-          {
-            type: 'mrkdwn',
-            text: `*Time Elapsed:* ${progress.timeElapsed}`
-          },
-          {
-            type: 'mrkdwn',
-            text: `*Delivered:* ${progress.accepted.toLocaleString()} (${acceptanceRate}%)`
-          },
-          {
-            type: 'mrkdwn',
-            text: `*Est. Completion:* ${progress.estimatedCompletion}`
-          }
-        ]
+        type: 'divider'
       },
       {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: '*Deliverability Metrics:*'
+          text: '*Delivery Metrics*'
         }
       },
       {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `${acceptanceRate >= 95 ? this.STATUS_INDICATORS.completed : acceptanceRate >= 90 ? this.STATUS_INDICATORS.warning : this.STATUS_INDICATORS.failed} *Delivery Rate:* ${acceptanceRate}%\n` +
-                `${bounceRate <= 2 ? this.STATUS_INDICATORS.completed : bounceRate <= 5 ? this.STATUS_INDICATORS.warning : this.STATUS_INDICATORS.failed} *Total Bounces:* ${progress.bounced} (${bounceRate}%)\n` +
-                `${parseFloat(hardBounceRate) <= 0.5 ? this.STATUS_INDICATORS.completed : parseFloat(hardBounceRate) <= 1 ? this.STATUS_INDICATORS.warning : this.STATUS_INDICATORS.failed} *Hard Bounces:* ${progress.hardBounced || 0} (${hardBounceRate}%)\n` +
-                `${this.STATUS_INDICATORS.active} *Queue Status:* Processing remaining ${(progress.total - progress.sent).toLocaleString()} emails`
+          text: '```' +
+                `Accepted:      ${progress.accepted.toLocaleString()} (${acceptanceRate}%)\n` +
+                `Bounced:       ${progress.bounced} (${bounceRate}%)\n` +
+                `├─ Hard:       ${progress.hardBounced || 0} (${hardBounceRate}%)\n` +
+                `└─ Soft:       ${progress.softBounced || 0}` +
+                '```'
         }
       }
     ];
@@ -411,13 +404,12 @@ export class CampaignSlackNotifications {
     if (data.listQualityAssessment) {
       const assessment = data.listQualityAssessment;
 
-      // Quality score indicator
-      const qualityEmoji = assessment.overallQuality === 'excellent' ? '🟢' :
-                          assessment.overallQuality === 'good' ? '🟢' :
-                          assessment.overallQuality === 'fair' ? '🟡' : '🔴';
+      // Quality score indicator using red circles for critical issues
+      const qualityCircle = assessment.overallQuality === 'excellent' || assessment.overallQuality === 'good' ? '🟢' :
+                            assessment.overallQuality === 'fair' ? '🟡' : '🔴';
 
-      const healthEmoji = assessment.listHealthStatus === 'healthy' ? '✅' :
-                         assessment.listHealthStatus === 'warning' ? '⚠️' : '🚨';
+      const healthCircle = assessment.listHealthStatus === 'healthy' ? '🟢' :
+                           assessment.listHealthStatus === 'warning' ? '🟡' : '🔴';
 
       blocks.push({
         type: 'divider'
@@ -427,33 +419,57 @@ export class CampaignSlackNotifications {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `*🤖 AI List Quality Assessment*\n\n${healthEmoji} *Status:* ${assessment.listHealthStatus.toUpperCase()} | ${qualityEmoji} *Quality:* ${assessment.overallQuality.toUpperCase()} (${assessment.qualityScore}/100)`
+          text: `*AI LIST QUALITY ASSESSMENT*\n\n${healthCircle} *Health:* ${assessment.listHealthStatus.toUpperCase()} | ${qualityCircle} *Quality:* ${assessment.overallQuality.toUpperCase()} (${assessment.qualityScore}/100)`
         }
       });
 
-      // Executive summary
+      blocks.push({
+        type: 'divider'
+      });
+
+      // Executive summary in code block
       blocks.push({
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `*Executive Summary:*\n${assessment.executiveSummary}`
+          text: `*Executive Summary*\n\`\`\`${assessment.executiveSummary}\`\`\``
         }
       });
 
       // Comparison with previous round (if available)
       if (data.roundNumber > 1 && assessment.comparison.significance) {
-        const trendEmoji = assessment.comparison.trend === 'improving' ? '📈' :
-                          assessment.comparison.trend === 'declining' ? '📉' : '➡️';
+        const trendCircle = assessment.comparison.trend === 'improving' ? '🟢' :
+                            assessment.comparison.trend === 'declining' ? '🔴' : '🟡';
+
+        blocks.push({
+          type: 'divider'
+        });
 
         blocks.push({
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `*${trendEmoji} Round Comparison:*\n` +
-                  `• Bounce Rate: ${assessment.comparison.bounceRateChange > 0 ? '+' : ''}${assessment.comparison.bounceRateChange}%\n` +
-                  `• Delivery Rate: ${assessment.comparison.deliveryRateChange > 0 ? '+' : ''}${assessment.comparison.deliveryRateChange}%\n` +
-                  `• Trend: ${assessment.comparison.trend.toUpperCase()}\n\n` +
-                  `${assessment.comparison.significance}`
+            text: `*Round Comparison (vs Round ${data.roundNumber - 1})*`
+          }
+        });
+
+        blocks.push({
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: '```' +
+                  `Bounce Rate:   ${assessment.comparison.bounceRateChange > 0 ? '+' : ''}${assessment.comparison.bounceRateChange}%\n` +
+                  `Delivery Rate: ${assessment.comparison.deliveryRateChange > 0 ? '+' : ''}${assessment.comparison.deliveryRateChange}%\n` +
+                  `Trend:         ${assessment.comparison.trend.toUpperCase()} ${trendCircle}` +
+                  '```'
+          }
+        });
+
+        blocks.push({
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `_${assessment.comparison.significance}_`
           }
         });
       }
@@ -467,31 +483,54 @@ export class CampaignSlackNotifications {
           })
           .slice(0, 3);
 
-        const insightsText = topInsights.map(insight => {
-          const icon = insight.type === 'positive' ? '✅' :
-                      insight.type === 'warning' ? '⚠️' : '🚨';
-          return `${icon} *${insight.metric}:* ${insight.observation}`;
-        }).join('\n');
+        blocks.push({
+          type: 'divider'
+        });
 
         blocks.push({
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `*Key Insights:*\n${insightsText}`
+            text: '*Top Insights*'
           }
+        });
+
+        topInsights.forEach((insight, idx) => {
+          const circle = insight.type === 'positive' ? '🟢' :
+                         insight.type === 'warning' ? '🟡' : '🔴';
+
+          blocks.push({
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `${circle} *${idx + 1}. ${insight.metric}*\n\`\`\`${insight.observation}\`\`\`\n_Impact: ${insight.impact.toUpperCase()}_`
+            }
+          });
         });
       }
 
       // Recommendations (max 3)
       if (assessment.recommendations && assessment.recommendations.length > 0) {
         const topRecs = assessment.recommendations.slice(0, 3);
-        const recsText = topRecs.map((rec, idx) => `${idx + 1}. ${rec}`).join('\n');
+
+        blocks.push({
+          type: 'divider'
+        });
 
         blocks.push({
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `*Recommendations:*\n${recsText}`
+            text: '*Recommendations*'
+          }
+        });
+
+        const recsText = topRecs.map((rec, idx) => `${idx + 1}. ${rec}`).join('\n');
+        blocks.push({
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: '```' + recsText + '```'
           }
         });
       }
@@ -499,25 +538,32 @@ export class CampaignSlackNotifications {
       // Predictions
       if (assessment.predictions) {
         blocks.push({
+          type: 'divider'
+        });
+
+        blocks.push({
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `*Predictions:*\n` +
-                  `• Next Round: ${assessment.predictions.nextRoundExpectations}\n` +
-                  `• List Cleaning Needed: ${assessment.predictions.listCleaningNeeded ? '⚠️ YES' : '✅ NO'}\n` +
-                  `• Est. Healthy Contacts: ${assessment.predictions.estimatedHealthyContacts.toLocaleString()}`
+            text: '*Predictions*'
+          }
+        });
+
+        const cleaningCircle = assessment.predictions.listCleaningNeeded ? '🔴' : '🟢';
+
+        blocks.push({
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: '```' +
+                  `Next Round:         ${assessment.predictions.nextRoundExpectations}\n` +
+                  `List Cleaning:      ${assessment.predictions.listCleaningNeeded ? 'YES' : 'NO'} ${cleaningCircle}\n` +
+                  `Healthy Contacts:   ${assessment.predictions.estimatedHealthyContacts.toLocaleString()}` +
+                  '```'
           }
         });
       }
     }
-
-    blocks.push({
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: '*Next Update:* Full completion report when all emails delivered'
-      }
-    });
 
     blocks.push({
       type: 'divider'

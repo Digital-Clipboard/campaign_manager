@@ -303,8 +303,8 @@ export class CampaignSchedulerService {
   private async schedulePostLaunchNotification(config: CampaignScheduleConfig): Promise<void> {
     const jobId = `${config.campaignName}-post-launch-status`;
 
-    // Day of at 9:15 AM UTC (10:15 AM London - 15 min after launch)
-    const task = cron.schedule('15 9 * * 2', async () => {
+    // Day of at 10:30 AM UTC (11:30 AM London - 90 min after launch, when send is complete)
+    const task = cron.schedule('30 10 * * 2', async () => {
       try {
         logger.info('Sending post-launch status notification', { campaignName: config.campaignName });
 
@@ -320,8 +320,9 @@ export class CampaignSchedulerService {
         //         const liveStats = await mailjetClient.getEmailStatistics(mailjetCampaignId);
 
         // Simulated data for demonstration - replace with live MailJet data
-        const sent = Math.floor(tuesdayRound.targetCount * 0.15);
-        const delivered = Math.floor(tuesdayRound.targetCount * 0.14);
+        // At 90 minutes, campaign should be 100% complete
+        const sent = tuesdayRound.targetCount;
+        const delivered = Math.floor(tuesdayRound.targetCount * 0.98);
         const bounced = Math.floor(tuesdayRound.targetCount * 0.01);
         const hardBounced = Math.floor(bounced * 0.6); // Assume 60% of bounces are hard
         const softBounced = bounced - hardBounced;
@@ -335,12 +336,15 @@ export class CampaignSchedulerService {
           currentProgress: {
             sent,
             total: tuesdayRound.targetCount,
-            timeElapsed: '15 minutes',
-            estimatedCompletion: '45 minutes',
+            timeElapsed: '90 minutes',
+            estimatedCompletion: 'Complete',
             accepted: delivered,
+            delivered,
             bounced,
             hardBounced,
-            softBounced
+            softBounced,
+            queued: 0,
+            deferred: 0
           }
         };
 

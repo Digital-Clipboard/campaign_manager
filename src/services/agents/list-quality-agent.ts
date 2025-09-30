@@ -175,13 +175,32 @@ Time Since Launch: ${input.currentStats.timeElapsed}
 `;
     }
 
+    // Add context about timing - 90 minutes post-launch means campaign should be complete
+    const timeElapsed = input.currentStats.timeElapsed || '';
+    const isPostSendReport = timeElapsed.includes('90 minutes') || timeElapsed.includes('Complete');
+
+    if (isPostSendReport) {
+      prompt += `
+# Important Context: Post-Send Report (${timeElapsed})
+⚠️ This assessment is conducted 90 minutes after campaign launch - send should be complete.
+- Campaign distribution is COMPLETE - these are final deliverability metrics
+- Focus on deliverability metrics (delivery rate, bounce rate, hard/soft bounces)
+- Engagement metrics (opens, clicks) are still too early - typical engagement takes 24-48 hours
+- Zero or low opens/clicks at this stage is NORMAL and EXPECTED
+- Assess list quality based on delivery and bounce metrics only
+
+`;
+    }
+
     prompt += `
-# Industry Benchmarks
+# Industry Benchmarks for Deliverability
 - Delivery Rate: 95%+ is excellent, 90-95% is good, 85-90% is fair, <85% is poor
 - Bounce Rate: <2% is excellent, 2-5% is acceptable, >5% needs attention
 - Hard Bounce Rate: <0.5% is excellent, 0.5-1% is good, >1% indicates list quality issues
-- Open Rate: 25%+ is excellent, 20-25% is good, 15-20% is fair, <15% is poor
-- Click Rate: 3%+ is excellent, 2-3% is good, 1-2% is fair, <1% is poor
+
+# Engagement Benchmarks (only relevant after 24+ hours, not at 90 minutes)
+- Open Rate: 25%+ is excellent, 20-25% is good, 15-20% is fair, <15% is poor (not applicable yet)
+- Click Rate: 3%+ is excellent, 2-3% is good, 1-2% is fair, <1% is poor (not applicable yet)
 
 # Response Format (JSON)
 Provide your analysis in the following JSON format:
@@ -194,14 +213,14 @@ Provide your analysis in the following JSON format:
   "comparison": {
     "bounceRateChange": <percentage change, can be negative>,
     "deliveryRateChange": <percentage change>,
-    "engagementChange": <percentage change in opens+clicks>,
+    "engagementChange": <percentage change in opens+clicks - use 0 if early report>,
     "trend": "improving|stable|declining",
-    "significance": "<1-2 sentence explanation of what the comparison reveals>"
+    "significance": "<1-2 sentence explanation focusing on deliverability only if early report>"
   },
   "insights": [
     {
       "type": "positive|warning|critical",
-      "metric": "<metric name>",
+      "metric": "<metric name - focus on deliverability if early report>",
       "observation": "<specific observation>",
       "impact": "high|medium|low"
     }
@@ -210,9 +229,9 @@ Provide your analysis in the following JSON format:
     "<actionable recommendation 1>",
     "<actionable recommendation 2>"
   ],
-  "executiveSummary": "<2-3 sentence summary for executive team>",
+  "executiveSummary": "<2-3 sentence summary focusing on deliverability for early reports>",
   "predictions": {
-    "nextRoundExpectations": "<what to expect for next round>",
+    "nextRoundExpectations": "<what to expect for next round based on deliverability>",
     "listCleaningNeeded": <true|false>,
     "estimatedHealthyContacts": <estimated number of valid contacts>
   }
@@ -221,9 +240,9 @@ Provide your analysis in the following JSON format:
 
 Focus on:
 1. Hard bounce rate comparison (key quality indicator)
-2. List health trends
-3. Actionable insights for the marketing team
-4. Data-driven recommendations
+2. Delivery rate trends
+3. List health and cleanliness
+4. DO NOT penalize for zero or low opens/clicks - engagement takes 24+ hours to develop
 `;
 
     return prompt;
