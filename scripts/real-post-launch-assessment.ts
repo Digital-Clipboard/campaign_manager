@@ -52,7 +52,7 @@ async function realPostLaunchAssessment() {
     const campaigns = campaignsResponse.body.Data;
     console.log(`✅ Found ${campaigns.length} recent campaigns\n`);
 
-    // Find the most recent campaign (should be Round 2 you just launched)
+    // Find Round 1 and Round 2 campaigns
     console.log('📋 Recent Campaigns:');
     campaigns.slice(0, 5).forEach((campaign: any, i: number) => {
       const createdAt = new Date(campaign.CreatedAt);
@@ -61,103 +61,124 @@ async function realPostLaunchAssessment() {
       console.log(`      Status: ${campaign.Status}\n`);
     });
 
-    // Get the most recent campaign
-    const latestCampaign = campaigns[0];
-    console.log(`🎯 Using Latest Campaign: [${latestCampaign.ID}] ${latestCampaign.Subject}`);
-    console.log(`   Sent to list: ${latestCampaign.ListID || 'N/A'}\n`);
+    // Identify Round 1 and Round 2 campaigns
+    const round2Campaign = campaigns.find((c: any) =>
+      (c.Subject || '').toLowerCase().includes('round 2') ||
+      (c.Subject || '').toLowerCase().includes('batch 2')
+    ) || campaigns[0]; // Default to most recent if not found
 
-    // STEP 3: Fetch campaign statistics
+    const round1Campaign = campaigns.find((c: any) =>
+      (c.Subject || '').toLowerCase().includes('round 1') ||
+      (c.Subject || '').toLowerCase().includes('batch 1')
+    );
+
+    console.log(`🎯 Round 2 Campaign: [${round2Campaign.ID}] ${round2Campaign.Subject}`);
+    console.log(`   List: ${round2Campaign.ListID || 'N/A'}\n`);
+
+    if (round1Campaign) {
+      console.log(`📊 Round 1 Campaign: [${round1Campaign.ID}] ${round1Campaign.Subject}`);
+      console.log(`   List: ${round1Campaign.ListID || 'N/A'}\n`);
+    } else {
+      console.log(`⚠️  Round 1 Campaign: Not found in MailJet - using baseline data\n`);
+    }
+
+    // STEP 3: Fetch campaign statistics for BOTH rounds
     console.log('='.repeat(80));
     console.log('\n📊 STEP 3: Fetching Campaign Statistics...\n');
 
-    const statsResponse = await mailjet
-      .get('campaignstatistics', { version: 'v3' })
-      .id(latestCampaign.ID)
-      .request();
+    // Helper function to fetch stats for a campaign
+    async function fetchCampaignStats(campaign: any, roundName: string) {
+      console.log(`\n🔍 Fetching ${roundName} statistics...`);
 
-    const stats = statsResponse.body.Data[0];
+      const statsResponse = await mailjet
+        .get('campaignstatistics', { version: 'v3' })
+        .id(campaign.ID)
+        .request();
 
-    console.log('✅ Statistics Retrieved:\n');
-    console.log(`   Delivered: ${stats.DeliveredCount}`);
-    console.log(`   Opened: ${stats.OpenedCount} (${((stats.OpenedCount / stats.DeliveredCount) * 100).toFixed(2)}%)`);
-    console.log(`   Clicked: ${stats.ClickedCount} (${((stats.ClickedCount / stats.DeliveredCount) * 100).toFixed(2)}%)`);
-    console.log(`   Bounced: ${stats.BouncedCount}`);
-    console.log(`   Spam: ${stats.SpamComplaintCount}`);
-    console.log(`   Unsubscribed: ${stats.UnsubscribedCount}\n`);
+      const stats = statsResponse.body.Data[0];
 
-    // Fetch detailed bounce information
-    console.log('🔍 Fetching Detailed Bounce Information...\n');
+      console.log(`✅ ${roundName} Statistics Retrieved:`);
+      console.log(`   Delivered: ${stats.DeliveredCount}`);
+      console.log(`   Opened: ${stats.OpenedCount} (${((stats.OpenedCount / stats.DeliveredCount) * 100).toFixed(2)}%)`);
+      console.log(`   Clicked: ${stats.ClickedCount} (${((stats.ClickedCount / stats.DeliveredCount) * 100).toFixed(2)}%)`);
+      console.log(`   Bounced: ${stats.BouncedCount}`);
+      console.log(`   Spam: ${stats.SpamComplaintCount}`);
+      console.log(`   Unsubscribed: ${stats.UnsubscribedCount}\n`);
 
-    let hardBounceCount = 0;
-    let softBounceCount = 0;
+      // Fetch detailed bounce information
+      let hardBounceCount = 0;
+      let softBounceCount = 0;
 
-    try {
-      const bouncesResponse = await mailjet
-        .get('messagestatistics', { version: 'v3' })
-        .request({
-          CampaignID: latestCampaign.ID,
-          Limit: 1000
+      try {
+        const bouncesResponse = await mailjet
+          .get('messagestatistics', { version: 'v3' })
+          .request({
+            CampaignID: campaign.ID,
+            Limit: 1000
+          });
+
+        const messages = bouncesResponse.body.Data;
+
+        // Count hard vs soft bounces
+        messages.forEach((msg: any) => {
+          if (msg.Status === 'hardbounced') hardBounceCount++;
+          if (msg.Status === 'softbounced') softBounceCount++;
         });
 
-      const messages = bouncesResponse.body.Data;
+        console.log(`   Hard Bounces: ${hardBounceCount}`);
+        console.log(`   Soft Bounces: ${softBounceCount}`);
+      } catch (error) {
+        console.log(`   ⚠️  Could not fetch detailed bounce info, using estimates`);
+        hardBounceCount = Math.round(stats.BouncedCount * 0.6);
+        softBounceCount = stats.BouncedCount - hardBounceCount;
+      }
 
-      // Count hard vs soft bounces
-      messages.forEach((msg: any) => {
-        if (msg.Status === 'hardbounced') hardBounceCount++;
-        if (msg.Status === 'softbounced') softBounceCount++;
-      });
-
-      console.log(`✅ Bounce Analysis:`);
-      console.log(`   Hard Bounces: ${hardBounceCount}`);
-      console.log(`   Soft Bounces: ${softBounceCount}`);
-      console.log(`   Total Bounces: ${stats.BouncedCount}\n`);
-    } catch (error) {
-      console.log(`⚠️  Could not fetch detailed bounce info: ${error.message}`);
-      console.log(`   Using estimated split based on industry averages\n`);
-      hardBounceCount = Math.round(stats.BouncedCount * 0.6);
-      softBounceCount = stats.BouncedCount - hardBounceCount;
+      return {
+        sent: stats.DeliveredCount + stats.BouncedCount,
+        delivered: stats.DeliveredCount,
+        bounced: stats.BouncedCount,
+        hardBounced: hardBounceCount,
+        softBounced: softBounceCount,
+        opened: stats.OpenedCount,
+        clicked: stats.ClickedCount,
+        deliveryRate: parseFloat(((stats.DeliveredCount / (stats.DeliveredCount + stats.BouncedCount)) * 100).toFixed(2)),
+        bounceRate: parseFloat(((stats.BouncedCount / (stats.DeliveredCount + stats.BouncedCount)) * 100).toFixed(2)),
+        openRate: parseFloat(((stats.OpenedCount / (stats.DeliveredCount || 1)) * 100).toFixed(2)),
+        clickRate: parseFloat(((stats.ClickedCount / (stats.DeliveredCount || 1)) * 100).toFixed(2))
+      };
     }
 
-    // Calculate Round 2 metrics
-    const round2Stats = {
-      sent: stats.DeliveredCount + stats.BouncedCount,
-      delivered: stats.DeliveredCount,
-      bounced: stats.BouncedCount,
-      hardBounced: hardBounceCount,
-      softBounced: softBounceCount,
-      opened: stats.OpenedCount,
-      clicked: stats.ClickedCount,
-      deliveryRate: parseFloat(((stats.DeliveredCount / (stats.DeliveredCount + stats.BouncedCount)) * 100).toFixed(2)),
-      bounceRate: parseFloat(((stats.BouncedCount / (stats.DeliveredCount + stats.BouncedCount)) * 100).toFixed(2)),
-      openRate: parseFloat(((stats.OpenedCount / stats.DeliveredCount) * 100).toFixed(2)),
-      clickRate: parseFloat(((stats.ClickedCount / stats.DeliveredCount) * 100).toFixed(2)),
-      timeElapsed: '15 minutes'
-    };
+    // Fetch stats for both rounds
+    let round1Stats = null;
+    if (round1Campaign) {
+      round1Stats = await fetchCampaignStats(round1Campaign, 'Round 1');
+    } else {
+      // ⚠️ CRITICAL: Round 1 campaign not found in MailJet
+      // DO NOT USE HARDCODED DATA - this would make comparisons invalid
+      console.log('\n⚠️  CRITICAL: Round 1 campaign not found in MailJet');
+      console.log('   Comparison to previous round will be SKIPPED');
+      console.log('   Assessment will be based on Round 2 data only\n');
+    }
 
-    // Round 1 baseline (from previous campaign - you'd fetch this from DB or previous campaign)
-    const round1Stats = {
-      sent: 1000,
-      delivered: 970,
-      bounced: 30,
-      hardBounced: 18,
-      softBounced: 12,
-      opened: 240,
-      clicked: 32,
-      deliveryRate: 97.0,
-      bounceRate: 3.0,
-      openRate: 24.73,
-      clickRate: 3.30
+    const round2Stats = {
+      ...await fetchCampaignStats(round2Campaign, 'Round 2'),
+      timeElapsed: '15 minutes'
     };
 
     console.log('='.repeat(80));
     console.log('\n📈 COMPARISON:\n');
-    console.log('Round 1 (Baseline):');
-    console.log(`   Sent: ${round1Stats.sent}`);
-    console.log(`   Delivered: ${round1Stats.delivered} (${round1Stats.deliveryRate}%)`);
-    console.log(`   Bounced: ${round1Stats.bounced} (${round1Stats.bounceRate}%)`);
-    console.log(`   Hard Bounces: ${round1Stats.hardBounced}`);
-    console.log(`   Opens: ${round1Stats.opened} (${round1Stats.openRate}%)`);
-    console.log(`   Clicks: ${round1Stats.clicked} (${round1Stats.clickRate}%)\n`);
+
+    if (round1Stats) {
+      console.log('Round 1 (Baseline):');
+      console.log(`   Sent: ${round1Stats.sent}`);
+      console.log(`   Delivered: ${round1Stats.delivered} (${round1Stats.deliveryRate}%)`);
+      console.log(`   Bounced: ${round1Stats.bounced} (${round1Stats.bounceRate}%)`);
+      console.log(`   Hard Bounces: ${round1Stats.hardBounced}`);
+      console.log(`   Opens: ${round1Stats.opened} (${round1Stats.openRate}%)`);
+      console.log(`   Clicks: ${round1Stats.clicked} (${round1Stats.clickRate}%)\n`);
+    } else {
+      console.log('⚠️  Round 1 data not available - no comparison possible\n');
+    }
 
     console.log('Round 2 (Current):');
     console.log(`   Sent: ${round2Stats.sent}`);
@@ -167,15 +188,21 @@ async function realPostLaunchAssessment() {
     console.log(`   Opens: ${round2Stats.opened} (${round2Stats.openRate}%)`);
     console.log(`   Clicks: ${round2Stats.clicked} (${round2Stats.clickRate}%)\n`);
 
-    // Calculate changes
-    const bounceRateChange = ((round2Stats.bounceRate - round1Stats.bounceRate) / round1Stats.bounceRate * 100).toFixed(1);
-    const hardBounceChange = ((round2Stats.hardBounced - round1Stats.hardBounced) / round1Stats.hardBounced * 100).toFixed(1);
-    const deliveryRateChange = (round2Stats.deliveryRate - round1Stats.deliveryRate).toFixed(2);
+    // Calculate changes only if Round 1 data exists
+    if (round1Stats) {
+      const bounceRateChange = ((round2Stats.bounceRate - round1Stats.bounceRate) / round1Stats.bounceRate * 100).toFixed(1);
+      const hardBounceChange = round1Stats.hardBounced > 0
+        ? ((round2Stats.hardBounced - round1Stats.hardBounced) / round1Stats.hardBounced * 100).toFixed(1)
+        : 'N/A';
+      const deliveryRateChange = (round2Stats.deliveryRate - round1Stats.deliveryRate).toFixed(2);
 
-    console.log('📊 Key Changes:');
-    console.log(`   Bounce Rate: ${bounceRateChange}%`);
-    console.log(`   Hard Bounces: ${hardBounceChange}%`);
-    console.log(`   Delivery Rate: ${deliveryRateChange > 0 ? '+' : ''}${deliveryRateChange}%\n`);
+      console.log('📊 Key Changes:');
+      console.log(`   Bounce Rate: ${bounceRateChange}%`);
+      console.log(`   Hard Bounces: ${hardBounceChange}%`);
+      console.log(`   Delivery Rate: ${deliveryRateChange > 0 ? '+' : ''}${deliveryRateChange}%\n`);
+    } else {
+      console.log('📊 No comparison available (Round 1 data missing)\n');
+    }
 
     // STEP 4: Run AI Assessment
     console.log('='.repeat(80));
@@ -296,7 +323,27 @@ async function realPostLaunchAssessment() {
 
     console.log('\n[END OF REPORT]\n');
     console.log('='.repeat(80));
-    console.log('\n✅ Assessment complete! This would be posted to #_traction automatically.\n');
+    console.log('\n📤 STEP 6: Posting to Slack...\n');
+
+    // Initialize Slack MCP service
+    const { SlackManagerMCPService } = await import('../src/services/slack-manager-mcp.service');
+    const slackService = new SlackManagerMCPService();
+
+    // Post to #_traction
+    const success = await slackService.sendMessage({
+      channel: '#_traction',
+      text: notification.text,
+      blocks: notification.blocks
+    });
+
+    if (success) {
+      console.log('✅ Successfully posted to #_traction!');
+    } else {
+      console.log('❌ Failed to post to #_traction');
+    }
+
+    console.log('\n' + '='.repeat(80));
+    console.log('\n✅ Assessment complete and posted to #_traction!\n');
 
   } catch (error) {
     console.error('\n❌ Error:', error.message);
