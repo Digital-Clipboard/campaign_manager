@@ -38,48 +38,43 @@ async function realPostLaunchAssessment() {
 
     console.log('✅ Connected to MailJet API\n');
 
-    // STEP 2: Fetch campaign list to find Round 2
+    // STEP 2: Fetch specific campaigns by ID
     console.log('='.repeat(80));
-    console.log('\n🔍 STEP 2: Fetching Recent Campaigns...\n');
+    console.log('\n🔍 STEP 2: Fetching Campaign Data...\n');
 
-    const campaignsResponse = await mailjet
-      .get('campaign', { version: 'v3' })
-      .request({
-        Limit: 20,
-        Sort: 'CreatedAt DESC'
-      });
+    // Known campaign IDs from MailJet
+    const ROUND_1_CAMPAIGN_ID = 7758947928;
+    const ROUND_2_CAMPAIGN_ID = 7758985090;
 
-    const campaigns = campaignsResponse.body.Data;
-    console.log(`✅ Found ${campaigns.length} recent campaigns\n`);
+    console.log(`📋 Fetching campaigns:`);
+    console.log(`   Round 1: Campaign ID ${ROUND_1_CAMPAIGN_ID}`);
+    console.log(`   Round 2: Campaign ID ${ROUND_2_CAMPAIGN_ID}\n`);
 
-    // Find Round 1 and Round 2 campaigns
-    console.log('📋 Recent Campaigns:');
-    campaigns.slice(0, 5).forEach((campaign: any, i: number) => {
-      const createdAt = new Date(campaign.CreatedAt);
-      console.log(`   ${i + 1}. [${campaign.ID}] ${campaign.Subject || 'No Subject'}`);
-      console.log(`      Created: ${createdAt.toUTCString()}`);
-      console.log(`      Status: ${campaign.Status}\n`);
-    });
+    // Fetch Round 1 campaign
+    let round1Campaign = null;
+    try {
+      const r1Response = await mailjet
+        .get('campaign', { version: 'v3' })
+        .id(ROUND_1_CAMPAIGN_ID)
+        .request();
+      round1Campaign = r1Response.body.Data[0];
+      console.log(`✅ Round 1 Campaign Found: [${round1Campaign.ID}] ${round1Campaign.Subject || 'No Subject'}`);
+    } catch (error) {
+      console.log(`⚠️  Round 1 Campaign (${ROUND_1_CAMPAIGN_ID}) not found or not accessible`);
+    }
 
-    // Identify Round 1 and Round 2 campaigns
-    const round2Campaign = campaigns.find((c: any) =>
-      (c.Subject || '').toLowerCase().includes('round 2') ||
-      (c.Subject || '').toLowerCase().includes('batch 2')
-    ) || campaigns[0]; // Default to most recent if not found
-
-    const round1Campaign = campaigns.find((c: any) =>
-      (c.Subject || '').toLowerCase().includes('round 1') ||
-      (c.Subject || '').toLowerCase().includes('batch 1')
-    );
-
-    console.log(`🎯 Round 2 Campaign: [${round2Campaign.ID}] ${round2Campaign.Subject}`);
-    console.log(`   List: ${round2Campaign.ListID || 'N/A'}\n`);
-
-    if (round1Campaign) {
-      console.log(`📊 Round 1 Campaign: [${round1Campaign.ID}] ${round1Campaign.Subject}`);
-      console.log(`   List: ${round1Campaign.ListID || 'N/A'}\n`);
-    } else {
-      console.log(`⚠️  Round 1 Campaign: Not found in MailJet - using baseline data\n`);
+    // Fetch Round 2 campaign
+    let round2Campaign = null;
+    try {
+      const r2Response = await mailjet
+        .get('campaign', { version: 'v3' })
+        .id(ROUND_2_CAMPAIGN_ID)
+        .request();
+      round2Campaign = r2Response.body.Data[0];
+      console.log(`✅ Round 2 Campaign Found: [${round2Campaign.ID}] ${round2Campaign.Subject || 'No Subject'}\n`);
+    } catch (error) {
+      console.log(`❌ ERROR: Round 2 Campaign (${ROUND_2_CAMPAIGN_ID}) not found!`);
+      throw new Error('Cannot proceed without Round 2 campaign data');
     }
 
     // STEP 3: Fetch campaign statistics for BOTH rounds
