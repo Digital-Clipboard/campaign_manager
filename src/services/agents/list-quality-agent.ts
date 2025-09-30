@@ -175,19 +175,19 @@ Time Since Launch: ${input.currentStats.timeElapsed}
 `;
     }
 
-    // Add context about timing
-    const isEarlyReport = input.currentStats.timeElapsed &&
-      (input.currentStats.timeElapsed.includes('15 minutes') ||
-       input.currentStats.timeElapsed.includes('10 minutes'));
+    // Add context about timing - 90 minutes post-launch means campaign should be complete
+    const timeElapsed = input.currentStats.timeElapsed || '';
+    const isPostSendReport = timeElapsed.includes('90 minutes') || timeElapsed.includes('Complete');
 
-    if (isEarlyReport) {
+    if (isPostSendReport) {
       prompt += `
-# Important Context: Early Post-Launch Report (${input.currentStats.timeElapsed})
-⚠️ This assessment is being conducted shortly after campaign launch.
-- Focus ONLY on deliverability metrics (delivery rate, bounce rate, hard/soft bounces)
-- IGNORE engagement metrics (opens, clicks) as it's too early for meaningful data
-- Opens and clicks typically take 24-48 hours to stabilize
-- Zero opens/clicks at this stage is NORMAL and EXPECTED
+# Important Context: Post-Send Report (${timeElapsed})
+⚠️ This assessment is conducted 90 minutes after campaign launch - send should be complete.
+- Campaign distribution is COMPLETE - these are final deliverability metrics
+- Focus on deliverability metrics (delivery rate, bounce rate, hard/soft bounces)
+- Engagement metrics (opens, clicks) are still too early - typical engagement takes 24-48 hours
+- Zero or low opens/clicks at this stage is NORMAL and EXPECTED
+- Assess list quality based on delivery and bounce metrics only
 
 `;
     }
@@ -198,11 +198,9 @@ Time Since Launch: ${input.currentStats.timeElapsed}
 - Bounce Rate: <2% is excellent, 2-5% is acceptable, >5% needs attention
 - Hard Bounce Rate: <0.5% is excellent, 0.5-1% is good, >1% indicates list quality issues
 
-${!isEarlyReport ? `
-# Engagement Benchmarks (only relevant after 24+ hours)
-- Open Rate: 25%+ is excellent, 20-25% is good, 15-20% is fair, <15% is poor
-- Click Rate: 3%+ is excellent, 2-3% is good, 1-2% is fair, <1% is poor
-` : ''}
+# Engagement Benchmarks (only relevant after 24+ hours, not at 90 minutes)
+- Open Rate: 25%+ is excellent, 20-25% is good, 15-20% is fair, <15% is poor (not applicable yet)
+- Click Rate: 3%+ is excellent, 2-3% is good, 1-2% is fair, <1% is poor (not applicable yet)
 
 # Response Format (JSON)
 Provide your analysis in the following JSON format:
@@ -244,7 +242,7 @@ Focus on:
 1. Hard bounce rate comparison (key quality indicator)
 2. Delivery rate trends
 3. List health and cleanliness
-${isEarlyReport ? '4. DO NOT penalize for zero opens/clicks - this is expected at 15 minutes' : '4. Engagement trends (opens and clicks)'}
+4. DO NOT penalize for zero or low opens/clicks - engagement takes 24+ hours to develop
 `;
 
     return prompt;

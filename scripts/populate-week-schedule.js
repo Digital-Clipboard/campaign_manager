@@ -67,13 +67,13 @@ async function populateWeekSchedule() {
       details: 'Execute email campaign for second 1000 users',
       status: 'scheduled'
     },
-    // Tuesday 9:15am UTC (10:15am London): Post-launch stats (15 min after launch)
+    // Tuesday 10:30am UTC (11:30am London): Post-launch stats (90 min after launch, when send is complete)
     {
       weekNumber: 40,
       year: 2025,
       dayOfWeek: 'tuesday',
-      scheduledDate: new Date('2025-09-30T09:15:00Z'), // 9:15am UTC (10:15am London)
-      time: '09:15',
+      scheduledDate: new Date('2025-09-30T10:30:00Z'), // 10:30am UTC (11:30am London)
+      time: '10:30',
       activityType: 'review',
       name: 'Client Letter Round 2 - Initial Stats Report',
       roundNumber: 2,
@@ -144,13 +144,13 @@ async function populateWeekSchedule() {
       details: 'Execute email campaign for remaining users',
       status: 'scheduled'
     },
-    // Thursday 9:15am UTC (10:15am London): Post-launch stats (15 min after launch)
+    // Thursday 10:30am UTC (11:30am London): Post-launch stats (90 min after launch, when send is complete)
     {
       weekNumber: 40,
       year: 2025,
       dayOfWeek: 'thursday',
-      scheduledDate: new Date('2025-10-02T09:15:00Z'), // 9:15am UTC (10:15am London)
-      time: '09:15',
+      scheduledDate: new Date('2025-10-02T10:30:00Z'), // 10:30am UTC (11:30am London)
+      time: '10:30',
       activityType: 'review',
       name: 'Client Letter Round 3 - Initial Stats Report',
       roundNumber: 3,
