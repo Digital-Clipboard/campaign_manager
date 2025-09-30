@@ -93,11 +93,16 @@ export class SlackManagerMCPService {
       }
     }
 
-    // Send the message with channel_id
+    // Send the message with channel_id and optional blocks
     const messageParams: any = {
       channel_id: channelId,
       text: text
     };
+
+    // Include blocks if provided
+    if (blocks && blocks.length > 0) {
+      messageParams.blocks = blocks;
+    }
 
     const response = await this.callMCPTool('send_message', messageParams);
 
@@ -113,6 +118,8 @@ export class SlackManagerMCPService {
     logger.info('Slack message sent successfully', {
       channel,
       channelId,
+      hasBlocks: !!blocks && blocks.length > 0,
+      blockCount: blocks?.length || 0,
       response: response.result
     });
 
