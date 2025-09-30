@@ -3,6 +3,8 @@ import { queueRedis } from '../utils/redis';
 import { logger } from '../utils/logger';
 import { SlackManagerMCPService } from '../services/slack-manager-mcp.service';
 import { CampaignSlackNotifications, CampaignNotificationData } from '../services/slack/campaign-notifications';
+import { CampaignReportOrchestrator } from '../services/agents/campaign-report-orchestrator';
+import { EmailStatistics } from '../integrations/mcp-clients/mailjet-agent-client';
 
 // Campaign lifecycle notification job data
 export interface CampaignLifecycleJobData {
@@ -12,7 +14,7 @@ export interface CampaignLifecycleJobData {
   userRange: string;
   executionTime: string;
   channel: string;
-  notificationType: 'preparation' | 'pre-launch' | 'countdown' | 'post-launch' | 'completion';
+  notificationType: 'preparation' | 'pre-launch' | 'countdown' | 'launch' | 'post-launch' | 'completion';
   previousRoundStats?: {
     sent: number;
     deliveryRate: number;
@@ -132,8 +134,11 @@ export async function sendImmediateCampaignNotification(jobData: CampaignLifecyc
       case 'countdown':
         notification = notificationService.createAboutToSendNotification(notificationData);
         break;
+      case 'launch':
+        notification = notificationService.createLaunchNotification(notificationData);
+        break;
       case 'post-launch':
-        notification = notificationService.createExecutionNotification(notificationData);
+        notification = notificationService.createPostLaunchNotification(notificationData);
         break;
       case 'completion':
         notification = notificationService.createCompletionNotification(notificationData);
@@ -213,11 +218,60 @@ export async function processCampaignLifecycleJob(jobData: CampaignLifecycleJobD
       case 'countdown':
         notification = notificationService.createAboutToSendNotification(notificationData);
         break;
+      case 'launch':
+        notification = notificationService.createLaunchNotification(notificationData);
+        break;
       case 'post-launch':
-        notification = notificationService.createExecutionNotification(notificationData);
+        notification = notificationService.createPostLaunchNotification(notificationData);
         break;
       case 'completion':
-        notification = notificationService.createCompletionNotification(notificationData);
+        // Use AI-enhanced reporting for completion notifications
+        try {
+          logger.info('Generating AI-enhanced completion report', {
+            campaignName: jobData.campaignName,
+            roundNumber: jobData.roundNumber
+          });
+
+          const orchestrator = new CampaignReportOrchestrator();
+
+          // Convert finalStats to EmailStatistics format
+          const currentStats: EmailStatistics = {
+            campaignId: `${jobData.campaignName}-round-${jobData.roundNumber}`,
+            sent: jobData.finalStats?.totalSent || jobData.targetCount,
+            delivered: jobData.finalStats?.delivered || 0,
+            opened: 0, // Will be populated by MailJet if available
+            clicked: 0,
+            bounced: jobData.finalStats?.bounced || 0,
+            hardBounced: 0,
+            softBounced: 0,
+            spam: 0,
+            unsubscribed: 0,
+            deliveryRate: jobData.finalStats?.deliveryRate || 0,
+            openRate: 0, // Will be populated by MailJet if available
+            clickRate: 0,
+            bounceRate: jobData.finalStats?.bounceRate || 0
+          };
+
+          const report = await orchestrator.generateCampaignReport({
+            campaignName: jobData.campaignName,
+            roundNumber: jobData.roundNumber,
+            currentStats
+          });
+
+          notification = notificationService.createAIEnhancedCompletionNotification(
+            jobData.campaignName,
+            jobData.roundNumber,
+            report
+          );
+
+          logger.info('AI-enhanced completion report generated successfully');
+        } catch (error) {
+          logger.error('Failed to generate AI-enhanced report, falling back to basic notification', {
+            error: error.message
+          });
+          // Fallback to basic notification if AI fails
+          notification = notificationService.createCompletionNotification(notificationData);
+        }
         break;
       default:
         throw new Error(`Unknown notification type: ${jobData.notificationType}`);

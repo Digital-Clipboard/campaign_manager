@@ -7,13 +7,13 @@ const prisma = new PrismaClient();
 async function populateWeekSchedule() {
   const scheduleData = [
     // ============ TUESDAY CAMPAIGN (Round 2) ============
-    // Monday 4pm: Pre-notification
+    // Monday 3am UTC (4am London): Pre-notification
     {
       weekNumber: 40,
       year: 2025,
       dayOfWeek: 'monday',
-      scheduledDate: new Date('2025-09-29T20:00:00Z'), // 4pm ET = 8pm UTC
-      time: '16:00',
+      scheduledDate: new Date('2025-09-29T03:00:00Z'), // 3am UTC (4am London)
+      time: '03:00',
       activityType: 'preparation',
       name: 'Client Letter Round 2 - Tomorrow Notification',
       roundNumber: 2,
@@ -22,13 +22,28 @@ async function populateWeekSchedule() {
       details: 'Pre-notification to #_traction channel for tomorrow\'s campaign',
       status: 'scheduled'
     },
-    // Tuesday 9:45am: 15-minute countdown
+    // Tuesday 6am UTC (7am London): Pre-launch checks
     {
       weekNumber: 40,
       year: 2025,
       dayOfWeek: 'tuesday',
-      scheduledDate: new Date('2025-09-30T13:45:00Z'), // 9:45am ET = 1:45pm UTC
-      time: '09:45',
+      scheduledDate: new Date('2025-09-30T06:00:00Z'), // 6am UTC (7am London)
+      time: '06:00',
+      activityType: 'preparation',
+      name: 'Client Letter Round 2 - Pre-Launch Checks',
+      roundNumber: 2,
+      recipientCount: 1000,
+      segment: 'Users 1,001-2,000',
+      details: 'Final system checks before campaign launch',
+      status: 'scheduled'
+    },
+    // Tuesday 8:45am UTC (9:45am London): 15-minute countdown
+    {
+      weekNumber: 40,
+      year: 2025,
+      dayOfWeek: 'tuesday',
+      scheduledDate: new Date('2025-09-30T08:45:00Z'), // 8:45am UTC (9:45am London)
+      time: '08:45',
       activityType: 'preparation',
       name: 'Client Letter Round 2 - 15 Minute Warning',
       roundNumber: 2,
@@ -37,13 +52,13 @@ async function populateWeekSchedule() {
       details: 'Campaign launching in 15 minutes notification',
       status: 'scheduled'
     },
-    // Tuesday 10:00am: Campaign launch
+    // Tuesday 9:00am UTC (10:00am London): Campaign launch
     {
       weekNumber: 40,
       year: 2025,
       dayOfWeek: 'tuesday',
-      scheduledDate: new Date('2025-09-30T14:00:00Z'), // 10am ET = 2pm UTC
-      time: '10:00',
+      scheduledDate: new Date('2025-09-30T09:00:00Z'), // 9:00am UTC (10:00am London)
+      time: '09:00',
       activityType: 'launch',
       name: 'Client Letter Round 2 - Campaign Launch',
       roundNumber: 2,
@@ -52,30 +67,30 @@ async function populateWeekSchedule() {
       details: 'Execute email campaign for second 1000 users',
       status: 'scheduled'
     },
-    // Tuesday 10:10am: Post-launch stats
+    // Tuesday 9:15am UTC (10:15am London): Post-launch stats (15 min after launch)
     {
       weekNumber: 40,
       year: 2025,
       dayOfWeek: 'tuesday',
-      scheduledDate: new Date('2025-09-30T14:10:00Z'), // 10:10am ET = 2:10pm UTC
-      time: '10:10',
+      scheduledDate: new Date('2025-09-30T09:15:00Z'), // 9:15am UTC (10:15am London)
+      time: '09:15',
       activityType: 'review',
       name: 'Client Letter Round 2 - Initial Stats Report',
       roundNumber: 2,
       recipientCount: 1000,
       segment: 'Users 1,001-2,000',
-      details: 'Post-launch statistics and delivery confirmation',
+      details: 'Post-launch statistics with live MailJet data: hard bounces, delivery confirmation, immediate reactions',
       status: 'scheduled'
     },
 
     // ============ THURSDAY CAMPAIGN (Round 3) ============
-    // Wednesday 4pm: Pre-notification
+    // Wednesday 3am UTC (4am London): Pre-notification
     {
       weekNumber: 40,
       year: 2025,
       dayOfWeek: 'wednesday',
-      scheduledDate: new Date('2025-10-01T20:00:00Z'), // 4pm ET = 8pm UTC
-      time: '16:00',
+      scheduledDate: new Date('2025-10-01T03:00:00Z'), // 3am UTC (4am London)
+      time: '03:00',
       activityType: 'preparation',
       name: 'Client Letter Round 3 - Tomorrow Notification',
       roundNumber: 3,
@@ -84,13 +99,28 @@ async function populateWeekSchedule() {
       details: 'Pre-notification to #_traction channel for tomorrow\'s campaign',
       status: 'scheduled'
     },
-    // Thursday 9:45am: 15-minute countdown
+    // Thursday 6am UTC (7am London): Pre-launch checks
     {
       weekNumber: 40,
       year: 2025,
       dayOfWeek: 'thursday',
-      scheduledDate: new Date('2025-10-02T13:45:00Z'), // 9:45am ET = 1:45pm UTC
-      time: '09:45',
+      scheduledDate: new Date('2025-10-02T06:00:00Z'), // 6am UTC (7am London)
+      time: '06:00',
+      activityType: 'preparation',
+      name: 'Client Letter Round 3 - Pre-Launch Checks',
+      roundNumber: 3,
+      recipientCount: 1000,
+      segment: 'Users 2,001+',
+      details: 'Final system checks before campaign launch',
+      status: 'scheduled'
+    },
+    // Thursday 8:45am UTC (9:45am London): 15-minute countdown
+    {
+      weekNumber: 40,
+      year: 2025,
+      dayOfWeek: 'thursday',
+      scheduledDate: new Date('2025-10-02T08:45:00Z'), // 8:45am UTC (9:45am London)
+      time: '08:45',
       activityType: 'preparation',
       name: 'Client Letter Round 3 - 15 Minute Warning',
       roundNumber: 3,
@@ -99,13 +129,13 @@ async function populateWeekSchedule() {
       details: 'Campaign launching in 15 minutes notification',
       status: 'scheduled'
     },
-    // Thursday 10:00am: Campaign launch
+    // Thursday 9:00am UTC (10:00am London): Campaign launch
     {
       weekNumber: 40,
       year: 2025,
       dayOfWeek: 'thursday',
-      scheduledDate: new Date('2025-10-02T14:00:00Z'), // 10am ET = 2pm UTC
-      time: '10:00',
+      scheduledDate: new Date('2025-10-02T09:00:00Z'), // 9:00am UTC (10:00am London)
+      time: '09:00',
       activityType: 'launch',
       name: 'Client Letter Round 3 - Campaign Launch',
       roundNumber: 3,
@@ -114,19 +144,19 @@ async function populateWeekSchedule() {
       details: 'Execute email campaign for remaining users',
       status: 'scheduled'
     },
-    // Thursday 10:10am: Post-launch stats
+    // Thursday 9:15am UTC (10:15am London): Post-launch stats (15 min after launch)
     {
       weekNumber: 40,
       year: 2025,
       dayOfWeek: 'thursday',
-      scheduledDate: new Date('2025-10-02T14:10:00Z'), // 10:10am ET = 2:10pm UTC
-      time: '10:10',
+      scheduledDate: new Date('2025-10-02T09:15:00Z'), // 9:15am UTC (10:15am London)
+      time: '09:15',
       activityType: 'review',
       name: 'Client Letter Round 3 - Initial Stats Report',
       roundNumber: 3,
       recipientCount: 1000,
       segment: 'Users 2,001+',
-      details: 'Post-launch statistics and delivery confirmation',
+      details: 'Post-launch statistics with live MailJet data: hard bounces, delivery confirmation, immediate reactions',
       status: 'scheduled'
     }
   ];

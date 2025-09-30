@@ -1,4 +1,5 @@
 import { logger } from '../../utils/logger';
+import { ListQualityAssessment } from '../agents/list-quality-agent';
 
 export interface CampaignNotificationData {
   campaignName: string;
@@ -19,7 +20,10 @@ export interface CampaignNotificationData {
     estimatedCompletion: string;
     accepted: number;
     bounced: number;
+    hardBounced?: number;
+    softBounced?: number;
   };
+  listQualityAssessment?: ListQualityAssessment;
   finalStats?: {
     totalSent: number;
     delivered: number;
@@ -200,7 +204,7 @@ export class CampaignSlackNotifications {
   }
 
   /**
-   * Create about-to-send notification (5 minutes before)
+   * Create about-to-send notification (15 minutes before)
    */
   createAboutToSendNotification(data: CampaignNotificationData): any {
     const blocks = [
@@ -219,7 +223,7 @@ export class CampaignSlackNotifications {
         text: {
           type: 'mrkdwn',
           text: `*${data.campaignName} - Round ${data.roundNumber}*\n` +
-                `*Launching in 5 minutes*`
+                `*⏰ Launching in 15 minutes*`
         }
       },
       {
@@ -249,7 +253,278 @@ export class CampaignSlackNotifications {
     ];
 
     return {
-      text: `Campaign launching in 5 minutes: ${data.campaignName} Round ${data.roundNumber}`,
+      text: `Campaign launching in 15 minutes: ${data.campaignName} Round ${data.roundNumber}`,
+      blocks
+    };
+  }
+
+  /**
+   * Create campaign launch notification (at launch time)
+   */
+  createLaunchNotification(data: CampaignNotificationData): any {
+    const blocks = [
+      {
+        type: 'divider'
+      },
+      {
+        type: 'header',
+        text: {
+          type: 'plain_text',
+          text: '🚀 CAMPAIGN LAUNCHING NOW'
+        }
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*${data.campaignName} - Round ${data.roundNumber}*\n\n` +
+                `${this.STATUS_INDICATORS.active} *Campaign is now launching to ${data.targetCount.toLocaleString()} recipients*`
+        }
+      },
+      {
+        type: 'section',
+        fields: [
+          {
+            type: 'mrkdwn',
+            text: `*Segment:* ${data.userRange}`
+          },
+          {
+            type: 'mrkdwn',
+            text: `*Launch Time:* ${data.executionTime} UTC`
+          },
+          {
+            type: 'mrkdwn',
+            text: `*Status:* ${this.STATUS_INDICATORS.active} IN PROGRESS`
+          },
+          {
+            type: 'mrkdwn',
+            text: `*Next Update:* 15 minutes`
+          }
+        ]
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '*Campaign Details:*'
+        }
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `${this.STATUS_INDICATORS.active} MailJet queue processing\n` +
+                `${this.STATUS_INDICATORS.active} Real-time delivery tracking active\n` +
+                `${this.STATUS_INDICATORS.active} Monitoring for bounces and deliverability\n` +
+                `${this.STATUS_INDICATORS.active} Initial statistics available in 15 minutes`
+        }
+      },
+      {
+        type: 'divider'
+      }
+    ];
+
+    return {
+      text: `🚀 Campaign launching now: ${data.campaignName} Round ${data.roundNumber}`,
+      blocks
+    };
+  }
+
+  /**
+   * Create post-launch notification with live MailJet data (15 min after launch)
+   */
+  createPostLaunchNotification(data: CampaignNotificationData): any {
+    const progress = data.currentProgress!;
+    const progressPercentage = Math.round((progress.sent / progress.total) * 100);
+    const acceptanceRate = progress.accepted > 0 ? Math.round((progress.accepted / progress.sent) * 100) : 0;
+    const bounceRate = progress.bounced > 0 ? Math.round((progress.bounced / progress.sent) * 100) : 0;
+    const hardBounceRate = (progress.hardBounced && progress.sent > 0) ?
+      ((progress.hardBounced / progress.sent) * 100).toFixed(2) : '0.00';
+
+    const blocks: any[] = [
+      {
+        type: 'divider'
+      },
+      {
+        type: 'header',
+        text: {
+          type: 'plain_text',
+          text: '📊 POST-LAUNCH REPORT (15 MIN)'
+        }
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*${data.campaignName} - Round ${data.roundNumber}*\n\n` +
+                `${this.STATUS_INDICATORS.active} *Campaign distribution in progress*`
+        }
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '*Distribution Progress:*'
+        }
+      },
+      {
+        type: 'section',
+        fields: [
+          {
+            type: 'mrkdwn',
+            text: `*Sent:* ${progress.sent.toLocaleString()} / ${progress.total.toLocaleString()} (${progressPercentage}%)`
+          },
+          {
+            type: 'mrkdwn',
+            text: `*Time Elapsed:* ${progress.timeElapsed}`
+          },
+          {
+            type: 'mrkdwn',
+            text: `*Delivered:* ${progress.accepted.toLocaleString()} (${acceptanceRate}%)`
+          },
+          {
+            type: 'mrkdwn',
+            text: `*Est. Completion:* ${progress.estimatedCompletion}`
+          }
+        ]
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '*Deliverability Metrics:*'
+        }
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `${acceptanceRate >= 95 ? this.STATUS_INDICATORS.completed : acceptanceRate >= 90 ? this.STATUS_INDICATORS.warning : this.STATUS_INDICATORS.failed} *Delivery Rate:* ${acceptanceRate}%\n` +
+                `${bounceRate <= 2 ? this.STATUS_INDICATORS.completed : bounceRate <= 5 ? this.STATUS_INDICATORS.warning : this.STATUS_INDICATORS.failed} *Total Bounces:* ${progress.bounced} (${bounceRate}%)\n` +
+                `${parseFloat(hardBounceRate) <= 0.5 ? this.STATUS_INDICATORS.completed : parseFloat(hardBounceRate) <= 1 ? this.STATUS_INDICATORS.warning : this.STATUS_INDICATORS.failed} *Hard Bounces:* ${progress.hardBounced || 0} (${hardBounceRate}%)\n` +
+                `${this.STATUS_INDICATORS.active} *Queue Status:* Processing remaining ${(progress.total - progress.sent).toLocaleString()} emails`
+        }
+      }
+    ];
+
+    // Add AI list quality assessment if available
+    if (data.listQualityAssessment) {
+      const assessment = data.listQualityAssessment;
+
+      // Quality score indicator
+      const qualityEmoji = assessment.overallQuality === 'excellent' ? '🟢' :
+                          assessment.overallQuality === 'good' ? '🟢' :
+                          assessment.overallQuality === 'fair' ? '🟡' : '🔴';
+
+      const healthEmoji = assessment.listHealthStatus === 'healthy' ? '✅' :
+                         assessment.listHealthStatus === 'warning' ? '⚠️' : '🚨';
+
+      blocks.push({
+        type: 'divider'
+      });
+
+      blocks.push({
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*🤖 AI List Quality Assessment*\n\n${healthEmoji} *Status:* ${assessment.listHealthStatus.toUpperCase()} | ${qualityEmoji} *Quality:* ${assessment.overallQuality.toUpperCase()} (${assessment.qualityScore}/100)`
+        }
+      });
+
+      // Executive summary
+      blocks.push({
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*Executive Summary:*\n${assessment.executiveSummary}`
+        }
+      });
+
+      // Comparison with previous round (if available)
+      if (data.roundNumber > 1 && assessment.comparison.significance) {
+        const trendEmoji = assessment.comparison.trend === 'improving' ? '📈' :
+                          assessment.comparison.trend === 'declining' ? '📉' : '➡️';
+
+        blocks.push({
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `*${trendEmoji} Round Comparison:*\n` +
+                  `• Bounce Rate: ${assessment.comparison.bounceRateChange > 0 ? '+' : ''}${assessment.comparison.bounceRateChange}%\n` +
+                  `• Delivery Rate: ${assessment.comparison.deliveryRateChange > 0 ? '+' : ''}${assessment.comparison.deliveryRateChange}%\n` +
+                  `• Trend: ${assessment.comparison.trend.toUpperCase()}\n\n` +
+                  `${assessment.comparison.significance}`
+          }
+        });
+      }
+
+      // Top insights (max 3)
+      if (assessment.insights && assessment.insights.length > 0) {
+        const topInsights = assessment.insights
+          .sort((a, b) => {
+            const impactScore = { high: 3, medium: 2, low: 1 };
+            return impactScore[b.impact] - impactScore[a.impact];
+          })
+          .slice(0, 3);
+
+        const insightsText = topInsights.map(insight => {
+          const icon = insight.type === 'positive' ? '✅' :
+                      insight.type === 'warning' ? '⚠️' : '🚨';
+          return `${icon} *${insight.metric}:* ${insight.observation}`;
+        }).join('\n');
+
+        blocks.push({
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `*Key Insights:*\n${insightsText}`
+          }
+        });
+      }
+
+      // Recommendations (max 3)
+      if (assessment.recommendations && assessment.recommendations.length > 0) {
+        const topRecs = assessment.recommendations.slice(0, 3);
+        const recsText = topRecs.map((rec, idx) => `${idx + 1}. ${rec}`).join('\n');
+
+        blocks.push({
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `*Recommendations:*\n${recsText}`
+          }
+        });
+      }
+
+      // Predictions
+      if (assessment.predictions) {
+        blocks.push({
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `*Predictions:*\n` +
+                  `• Next Round: ${assessment.predictions.nextRoundExpectations}\n` +
+                  `• List Cleaning Needed: ${assessment.predictions.listCleaningNeeded ? '⚠️ YES' : '✅ NO'}\n` +
+                  `• Est. Healthy Contacts: ${assessment.predictions.estimatedHealthyContacts.toLocaleString()}`
+          }
+        });
+      }
+    }
+
+    blocks.push({
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: '*Next Update:* Full completion report when all emails delivered'
+      }
+    });
+
+    blocks.push({
+      type: 'divider'
+    });
+
+    return {
+      text: `Post-launch report: ${data.campaignName} Round ${data.roundNumber} - ${progress.sent}/${progress.total} sent (${progressPercentage}%)`,
       blocks
     };
   }
@@ -319,7 +594,22 @@ export class CampaignSlackNotifications {
   }
 
   /**
-   * Create completion notification
+   * Create AI-enhanced completion notification with analytics
+   * This method will be used when AI agents are available
+   */
+  createAIEnhancedCompletionNotification(
+    campaignName: string,
+    roundNumber: number,
+    formattedReport: any // FormattedCampaignReport from ReportFormattingAgent
+  ): any {
+    return {
+      text: formattedReport.summary,
+      blocks: formattedReport.blocks
+    };
+  }
+
+  /**
+   * Create completion notification (legacy - basic stats only)
    */
   createCompletionNotification(data: CampaignNotificationData): any {
     const stats = data.finalStats!;
