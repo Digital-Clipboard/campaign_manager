@@ -9,79 +9,79 @@ datasource db {
 }
 
 model Campaign {
-  id              String   @id @default(uuid())
-  name            String
-  type            String   // email_blast, product_launch, webinar, newsletter, custom
-  status          String   @default("planning") // planning, ready_for_review, needs_revision, approved, launched, completed, paused, cancelled
-  targetDate      DateTime
-  objectives      String[]
-  priority        String   @default("medium") // low, medium, high, critical
-  description     String?
-  budget          Float?
-  stakeholders    String[] // array of stakeholder identifiers
-  metadata        Json?    // flexible metadata storage
-  readinessScore  Int      @default(0) // 0-100
-  createdBy       String
-  updatedBy       String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String   @id @default(uuid())
+  name           String
+  type           String // email_blast, product_launch, webinar, newsletter, custom
+  status         String   @default("planning") // planning, ready_for_review, needs_revision, approved, launched, completed, paused, cancelled
+  targetDate     DateTime
+  objectives     String[]
+  priority       String   @default("medium") // low, medium, high, critical
+  description    String?
+  budget         Float?
+  stakeholders   String[] // array of stakeholder identifiers
+  metadata       Json? // flexible metadata storage
+  readinessScore Int      @default(0) // 0-100
+  createdBy      String
+  updatedBy      String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   // Relations
-  timeline        Timeline?
-  tasks           Task[]
-  approvals       Approval[]
-  notifications   Notification[]
-  assets          Asset[]
-  team            CampaignTeamMember[]
-  schedules       CampaignSchedule[]
+  timeline      Timeline?
+  tasks         Task[]
+  approvals     Approval[]
+  notifications Notification[]
+  assets        Asset[]
+  team          CampaignTeamMember[]
+  schedules     CampaignSchedule[]
 
   @@map("campaigns")
 }
 
 model Timeline {
-  id              String   @id @default(uuid())
-  campaignId      String   @unique
-  template        String   // standard, webinar, product_launch, custom
-  milestones      Json     // array of milestone objects
-  criticalPath    String[] // task IDs on critical path
-  buffer          Int      // buffer time in hours
-  estimatedHours  Int      // total estimated work hours
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String   @id @default(uuid())
+  campaignId     String   @unique
+  template       String // standard, webinar, product_launch, custom
+  milestones     Json // array of milestone objects
+  criticalPath   String[] // task IDs on critical path
+  buffer         Int // buffer time in hours
+  estimatedHours Int // total estimated work hours
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   // Relations
-  campaign        Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
   @@map("timelines")
 }
 
 model Task {
-  id              String    @id @default(uuid())
-  campaignId      String
-  title           String
-  description     String?
-  assigneeId      String?
-  dueDate         DateTime
-  priority        String    @default("medium") // low, medium, high, critical
-  status          String    @default("pending") // pending, assigned, in_progress, blocked, completed
-  dependencies    String[]  // array of task IDs
-  completedAt     DateTime?
-  blockedReason   String?
-  estimatedHours  Int       @default(1)
-  actualHours     Int       @default(0)
-  tags            String[]
-  milestoneId     String?   // reference to timeline milestone
-  templateTaskId  String?   // reference to template task that generated this
-  createdBy       String
-  updatedBy       String
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id             String    @id @default(uuid())
+  campaignId     String
+  title          String
+  description    String?
+  assigneeId     String?
+  dueDate        DateTime
+  priority       String    @default("medium") // low, medium, high, critical
+  status         String    @default("pending") // pending, assigned, in_progress, blocked, completed
+  dependencies   String[] // array of task IDs
+  completedAt    DateTime?
+  blockedReason  String?
+  estimatedHours Int       @default(1)
+  actualHours    Int       @default(0)
+  tags           String[]
+  milestoneId    String? // reference to timeline milestone
+  templateTaskId String? // reference to template task that generated this
+  createdBy      String
+  updatedBy      String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   // Relations
-  campaign        Campaign     @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  assignee        TeamMember?  @relation(fields: [assigneeId], references: [id])
-  comments        Comment[]
-  attachments     Attachment[]
+  campaign    Campaign     @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  assignee    TeamMember?  @relation(fields: [assigneeId], references: [id])
+  comments    Comment[]
+  attachments Attachment[]
 
   @@index([campaignId, status])
   @@index([assigneeId, dueDate])
@@ -92,63 +92,63 @@ model Task {
 }
 
 model TeamMember {
-  id              String   @id @default(uuid())
-  email           String   @unique
-  name            String
-  role            String
-  skills          String[] // array of skill names
-  timezone        String   @default("UTC")
-  slackUserId     String?
-  availability    Json     // weekly schedule object
-  maxConcurrent   Int      @default(5)
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id            String   @id @default(uuid())
+  email         String   @unique
+  name          String
+  role          String
+  skills        String[] // array of skill names
+  timezone      String   @default("UTC")
+  slackUserId   String?
+  availability  Json // weekly schedule object
+  maxConcurrent Int      @default(5)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   // Relations
-  tasks           Task[]
-  approvals       Approval[]
-  campaigns       CampaignTeamMember[]
-  sentNotifications Notification[] @relation("NotificationSender")
-  receivedNotifications Notification[] @relation("NotificationRecipient")
+  tasks                 Task[]
+  approvals             Approval[]
+  campaigns             CampaignTeamMember[]
+  sentNotifications     Notification[]       @relation("NotificationSender")
+  receivedNotifications Notification[]       @relation("NotificationRecipient")
 
   @@map("team_members")
 }
 
 model CampaignTeamMember {
-  id              String   @id @default(uuid())
-  campaignId      String
-  memberId        String
-  role            String   // owner, contributor, reviewer, approver
-  joinedAt        DateTime @default(now())
+  id         String   @id @default(uuid())
+  campaignId String
+  memberId   String
+  role       String // owner, contributor, reviewer, approver
+  joinedAt   DateTime @default(now())
 
   // Relations
-  campaign        Campaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  member          TeamMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  campaign Campaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  member   TeamMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   @@unique([campaignId, memberId])
   @@map("campaign_team_members")
 }
 
 model Approval {
-  id              String    @id @default(uuid())
-  campaignId      String
-  stage           String    // content, compliance, executive, final
-  approverId      String
-  status          String    @default("pending") // pending, approved, rejected, changes_requested
-  comments        String?
-  conditions      String[]  // array of approval conditions
-  decidedAt       DateTime?
-  deadline        DateTime
-  autoApprove     Boolean   @default(false)
-  autoApproveAt   DateTime?
-  urgency         String    @default("normal") // low, normal, high, critical
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id            String    @id @default(uuid())
+  campaignId    String
+  stage         String // content, compliance, executive, final
+  approverId    String
+  status        String    @default("pending") // pending, approved, rejected, changes_requested
+  comments      String?
+  conditions    String[] // array of approval conditions
+  decidedAt     DateTime?
+  deadline      DateTime
+  autoApprove   Boolean   @default(false)
+  autoApproveAt DateTime?
+  urgency       String    @default("normal") // low, normal, high, critical
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   // Relations
-  campaign        Campaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  approver        TeamMember @relation(fields: [approverId], references: [id])
+  campaign Campaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  approver TeamMember @relation(fields: [approverId], references: [id])
 
   @@unique([campaignId, stage, approverId])
   @@index([status, deadline])
@@ -157,28 +157,28 @@ model Approval {
 }
 
 model Notification {
-  id              String    @id @default(uuid())
-  campaignId      String?
-  type            String    // task_assigned, task_reminder, approval_request, escalation, etc.
-  senderId        String?
-  recipientId     String
-  channel         String    // email, slack, in-app, sms
-  urgency         String    @default("normal") // low, normal, high, critical
-  subject         String?
-  message         String
-  payload         Json?     // additional data for notification
-  scheduledFor    DateTime  @default(now())
-  sentAt          DateTime?
-  readAt          DateTime?
-  retries         Int       @default(0)
-  maxRetries      Int       @default(3)
-  error           String?
-  createdAt       DateTime  @default(now())
+  id           String    @id @default(uuid())
+  campaignId   String?
+  type         String // task_assigned, task_reminder, approval_request, escalation, etc.
+  senderId     String?
+  recipientId  String
+  channel      String // email, slack, in-app, sms
+  urgency      String    @default("normal") // low, normal, high, critical
+  subject      String?
+  message      String
+  payload      Json? // additional data for notification
+  scheduledFor DateTime  @default(now())
+  sentAt       DateTime?
+  readAt       DateTime?
+  retries      Int       @default(0)
+  maxRetries   Int       @default(3)
+  error        String?
+  createdAt    DateTime  @default(now())
 
   // Relations
-  campaign        Campaign?   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  sender          TeamMember? @relation("NotificationSender", fields: [senderId], references: [id])
-  recipient       TeamMember  @relation("NotificationRecipient", fields: [recipientId], references: [id])
+  campaign  Campaign?   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  sender    TeamMember? @relation("NotificationSender", fields: [senderId], references: [id])
+  recipient TeamMember  @relation("NotificationRecipient", fields: [recipientId], references: [id])
 
   @@index([recipientId, sentAt])
   @@index([scheduledFor, sentAt])
@@ -187,59 +187,59 @@ model Notification {
 }
 
 model Comment {
-  id              String   @id @default(uuid())
-  taskId          String
-  authorId        String
-  content         String
-  mentions        String[] // array of user IDs mentioned
-  isInternal      Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id         String   @id @default(uuid())
+  taskId     String
+  authorId   String
+  content    String
+  mentions   String[] // array of user IDs mentioned
+  isInternal Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   // Relations
-  task            Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@index([taskId, createdAt])
   @@map("comments")
 }
 
 model Attachment {
-  id              String   @id @default(uuid())
-  taskId          String
-  filename        String
-  originalName    String
-  mimeType        String
-  size            Int      // file size in bytes
-  url             String
-  uploadedBy      String
-  createdAt       DateTime @default(now())
+  id           String   @id @default(uuid())
+  taskId       String
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int // file size in bytes
+  url          String
+  uploadedBy   String
+  createdAt    DateTime @default(now())
 
   // Relations
-  task            Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@index([taskId])
   @@map("attachments")
 }
 
 model Asset {
-  id              String   @id @default(uuid())
-  campaignId      String
-  name            String
-  type            String   // image, video, document, template, etc.
-  filename        String
-  originalName    String
-  mimeType        String
-  size            Int      // file size in bytes
-  url             String
-  metadata        Json?    // additional asset metadata
-  version         Int      @default(1)
-  isActive        Boolean  @default(true)
-  uploadedBy      String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id           String   @id @default(uuid())
+  campaignId   String
+  name         String
+  type         String // image, video, document, template, etc.
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int // file size in bytes
+  url          String
+  metadata     Json? // additional asset metadata
+  version      Int      @default(1)
+  isActive     Boolean  @default(true)
+  uploadedBy   String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relations
-  campaign        Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
   @@index([campaignId, type])
   @@index([campaignId, isActive])
@@ -247,20 +247,20 @@ model Asset {
 }
 
 model Schedule {
-  id              String   @id @default(uuid())
-  campaignId      String?
-  title           String
-  type            String   // campaign_launch, milestone, meeting, deadline
-  startDate       DateTime
-  endDate         DateTime?
-  allDay          Boolean  @default(false)
-  recurring       Json?    // recurring pattern configuration
-  participants    String[] // array of team member IDs
-  location        String?
-  description     String?
-  reminders       Json?    // array of reminder configurations
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id           String    @id @default(uuid())
+  campaignId   String?
+  title        String
+  type         String // campaign_launch, milestone, meeting, deadline
+  startDate    DateTime
+  endDate      DateTime?
+  allDay       Boolean   @default(false)
+  recurring    Json? // recurring pattern configuration
+  participants String[] // array of team member IDs
+  location     String?
+  description  String?
+  reminders    Json? // array of reminder configurations
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   @@index([startDate, endDate])
   @@index([type, startDate])
@@ -268,33 +268,33 @@ model Schedule {
 }
 
 model Integration {
-  id              String   @id @default(uuid())
-  name            String   @unique // slack, mailjet, marketing_agent, etc.
-  type            String   // mcp_agent, webhook, api
-  config          Json     // integration configuration
-  status          String   @default("active") // active, inactive, error
-  lastSync        DateTime?
-  error           String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id        String    @id @default(uuid())
+  name      String    @unique // slack, mailjet, marketing_agent, etc.
+  type      String // mcp_agent, webhook, api
+  config    Json // integration configuration
+  status    String    @default("active") // active, inactive, error
+  lastSync  DateTime?
+  error     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   @@map("integrations")
 }
 
 model ActivityLog {
-  id              String   @id @default(uuid())
-  type            String   // campaign_status_change, task_assigned, etc.
-  entityType      String   // campaign, task, approval, etc.
-  entityId        String
-  action          String?  // created, updated, deleted, assigned, etc.
-  performedBy     String   // user who performed the action
-  actorId         String?  // backward compatibility
-  details         Json?    // action-specific details
-  changes         Json?    // before/after values
-  metadata        Json?    // additional context
-  ipAddress       String?
-  userAgent       String?
-  createdAt       DateTime @default(now())
+  id          String   @id @default(uuid())
+  type        String // campaign_status_change, task_assigned, etc.
+  entityType  String // campaign, task, approval, etc.
+  entityId    String
+  action      String? // created, updated, deleted, assigned, etc.
+  performedBy String // user who performed the action
+  actorId     String? // backward compatibility
+  details     Json? // action-specific details
+  changes     Json? // before/after values
+  metadata    Json? // additional context
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
 
   @@index([entityType, entityId])
   @@index([performedBy, createdAt])
@@ -304,26 +304,26 @@ model ActivityLog {
 }
 
 model CampaignSchedule {
-  id              String   @id @default(uuid())
-  weekNumber      Int      // ISO week number
-  year            Int
-  campaignId      String?
-  dayOfWeek       String   // monday, tuesday, wednesday, etc.
-  scheduledDate   DateTime
-  time            String   // HH:MM format
-  activityType    String   // launch, milestone, review, preparation
-  name            String
-  roundNumber     Int?
-  recipientCount  Int?
-  segment         String?
-  details         String?
-  status          String   @default("scheduled") // scheduled, in_progress, completed, cancelled
-  metadata        Json?    // additional activity metadata
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String   @id @default(uuid())
+  weekNumber     Int // ISO week number
+  year           Int
+  campaignId     String?
+  dayOfWeek      String // monday, tuesday, wednesday, etc.
+  scheduledDate  DateTime
+  time           String // HH:MM format
+  activityType   String // launch, milestone, review, preparation
+  name           String
+  roundNumber    Int?
+  recipientCount Int?
+  segment        String?
+  details        String?
+  status         String   @default("scheduled") // scheduled, in_progress, completed, cancelled
+  metadata       Json? // additional activity metadata
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   // Relations
-  campaign        Campaign? @relation(fields: [campaignId], references: [id])
+  campaign Campaign? @relation(fields: [campaignId], references: [id])
 
   @@unique([weekNumber, year, scheduledDate, time])
   @@index([weekNumber, year])
@@ -333,14 +333,198 @@ model CampaignSchedule {
 }
 
 model DashboardAccess {
-  id              String   @id @default(uuid())
-  name            String   // Team member name
-  email           String   @unique
-  accessToken     String   @unique // Unique login token
-  lastAccess      DateTime?
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id          String    @id @default(uuid())
+  name        String // Team member name
+  email       String    @unique
+  accessToken String    @unique // Unique login token
+  lastAccess  DateTime?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@map("dashboard_access")
+}
+
+model SuppressedContact {
+  id String @id @default(uuid())
+
+  // Contact identifiers
+  contactId BigInt @unique @map("contact_id") // Mailjet Contact ID
+  email     String @unique
+
+  // Suppression details
+  suppressionType String    @map("suppression_type") // hard_bounce, soft_bounce, spam_complaint, unsubscribe, manual
+  reason          String
+  bounceCount     Int       @default(1) @map("bounce_count")
+  firstBounceDate DateTime? @map("first_bounce_date")
+  lastBounceDate  DateTime? @map("last_bounce_date")
+
+  // Source tracking
+  sourceCampaignId String? @map("source_campaign_id")
+  sourceBatch      String? @map("source_batch")
+  sourceRound      Int?    @map("source_round")
+
+  // Mailjet integration
+  mailjetListId    BigInt? @map("mailjet_list_id")
+  mailjetBlocked   Boolean @default(false) @map("mailjet_blocked")
+  mailjetErrorCode String? @map("mailjet_error_code")
+
+  // Status and lifecycle
+  status                 String    @default("active") // active, revalidated, removed
+  isPermanent            Boolean   @default(true) @map("is_permanent")
+  revalidationEligibleAt DateTime? @map("revalidation_eligible_at")
+  revalidatedAt          DateTime? @map("revalidated_at")
+
+  // Audit trail
+  suppressedBy String  @default("system") @map("suppressed_by")
+  notes        String?
+  metadata     Json?
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([email])
+  @@index([contactId])
+  @@index([suppressionType])
+  @@index([status])
+  @@index([sourceBatch])
+  @@index([createdAt])
+  @@index([revalidationEligibleAt])
+  @@index([suppressionType, status])
+  @@index([sourceBatch, sourceRound])
+  @@map("suppressed_contacts")
+}
+
+// ============================================
+// CAMPAIGN LIFECYCLE MODELS
+// ============================================
+
+/// Campaign Schedule for Lifecycle Management
+/// Tracks campaign rounds with automated lifecycle stages
+model LifecycleCampaignSchedule {
+  id               Int      @id @default(autoincrement())
+  campaignName     String
+  roundNumber      Int // 1, 2, or 3
+  scheduledDate    DateTime
+  scheduledTime    String // "09:15"
+
+  // List details
+  listName        String
+  listId          BigInt // MailJet list ID
+  recipientCount  Int
+  recipientRange  String // e.g., "1-1177"
+
+  // Campaign details
+  mailjetDraftId    BigInt?
+  mailjetCampaignId BigInt?
+  subject           String
+  senderName        String
+  senderEmail       String
+
+  // Notification tracking
+  notificationStatus Json // { prelaunch: { sent: bool, timestamp, status }, ... }
+
+  // Status
+  status CampaignStatus @default(SCHEDULED)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  metrics       LifecycleCampaignMetrics[]
+  notifications LifecycleNotificationLog[]
+
+  @@index([scheduledDate, roundNumber])
+  @@index([status])
+  @@index([mailjetCampaignId])
+  @@map("lifecycle_campaign_schedules")
+}
+
+/// Campaign Metrics collected from MailJet
+model LifecycleCampaignMetrics {
+  id                Int      @id @default(autoincrement())
+  campaignScheduleId Int
+  mailjetCampaignId BigInt
+
+  // Delivery metrics
+  processed   Int
+  delivered   Int
+  bounced     Int
+  hardBounces Int
+  softBounces Int
+  blocked     Int
+  queued      Int
+
+  // Engagement metrics
+  opened       Int   @default(0)
+  clicked      Int   @default(0)
+  unsubscribed Int   @default(0)
+  complained   Int   @default(0)
+
+  // Calculated rates
+  deliveryRate   Float
+  bounceRate     Float
+  hardBounceRate Float
+  softBounceRate Float
+  openRate       Float?
+  clickRate      Float?
+
+  // Timestamps
+  collectedAt DateTime  @default(now())
+  sendStartAt DateTime?
+  sendEndAt   DateTime?
+
+  // Relations
+  campaignSchedule LifecycleCampaignSchedule @relation(fields: [campaignScheduleId], references: [id], onDelete: Cascade)
+
+  @@index([mailjetCampaignId])
+  @@index([campaignScheduleId])
+  @@map("lifecycle_campaign_metrics")
+}
+
+/// Notification log for lifecycle stages
+model LifecycleNotificationLog {
+  id                 Int      @id @default(autoincrement())
+  campaignScheduleId Int
+  stage              NotificationStage
+  status             NotificationStatus
+  attempt            Int       @default(1)
+  errorMessage       String?
+  slackMessageId     String?
+  sentAt             DateTime  @default(now())
+
+  // Relations
+  campaignSchedule LifecycleCampaignSchedule @relation(fields: [campaignScheduleId], references: [id], onDelete: Cascade)
+
+  @@index([campaignScheduleId, stage])
+  @@index([status])
+  @@map("lifecycle_notification_logs")
+}
+
+/// Campaign status enum
+enum CampaignStatus {
+  SCHEDULED
+  READY
+  LAUNCHING
+  SENT
+  COMPLETED
+  BLOCKED
+}
+
+/// Notification stage enum
+enum NotificationStage {
+  PRELAUNCH
+  PREFLIGHT
+  LAUNCH_WARNING
+  LAUNCH_CONFIRMATION
+  WRAPUP
+}
+
+/// Notification status enum
+enum NotificationStatus {
+  SUCCESS
+  FAILURE
+  RETRYING
 }
