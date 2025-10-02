@@ -393,6 +393,8 @@ export default async function lifecycleRoutes(server: FastifyInstance) {
       }
 
       // Update schedule in database
+      const { prisma } = await import('@/lib/prisma');
+
       const updatedSchedule = await prisma.lifecycleCampaignSchedule.update({
         where: { id: scheduleId },
         data: {

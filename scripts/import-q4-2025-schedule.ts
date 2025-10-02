@@ -26,8 +26,8 @@ const q4Schedule = [
       'Feature activation rate > 20% within first week',
       'Support tickets < 10 for feature setup'
     ],
-    mailjetTemplateId: 123456, // TODO: Update with actual template
-    totalRecipients: 1500
+    mailjetTemplateId: 123456 // TODO: Update with actual template
+    
   },
   {
     name: 'Drawdown Income Sustainability',
@@ -51,8 +51,8 @@ const q4Schedule = [
       'Feature usage by > 30% of applicable clients',
       'Time saved per drawdown review > 45 minutes'
     ],
-    mailjetTemplateId: 123457, // TODO: Update with actual template
-    totalRecipients: 2000
+    mailjetTemplateId: 123456 // TODO: Update with actual template
+    
   },
   {
     name: 'Voyant Integration',
@@ -76,8 +76,8 @@ const q4Schedule = [
       'Data sync success rate > 95%',
       'User satisfaction score > 4.5/5'
     ],
-    mailjetTemplateId: 123458, // TODO: Update with actual template
-    totalRecipients: 800
+    mailjetTemplateId: 123456 // TODO: Update with actual template
+    
   },
   {
     name: 'Management Information',
@@ -101,8 +101,8 @@ const q4Schedule = [
       'Custom report creation > 10 per practice',
       'Time saved on reporting > 5 hours/month'
     ],
-    mailjetTemplateId: 123459, // TODO: Update with actual template
-    totalRecipients: 1200
+    mailjetTemplateId: 123456 // TODO: Update with actual template
+    
   },
   {
     name: 'Client Material Tool Kit',
@@ -126,8 +126,8 @@ const q4Schedule = [
       'Material customization rate > 60%',
       'Client onboarding time reduction'
     ],
-    mailjetTemplateId: 123460, // TODO: Update with actual template
-    totalRecipients: 1500
+    mailjetTemplateId: 123456 // TODO: Update with actual template
+    
   },
   {
     name: 'Compliance Corner',
@@ -151,8 +151,8 @@ const q4Schedule = [
       'Webinar attendance > 40',
       'Audit preparation time reduction'
     ],
-    mailjetTemplateId: 123461, // TODO: Update with actual template
-    totalRecipients: 900
+    mailjetTemplateId: 123456 // TODO: Update with actual template
+    
   },
   {
     name: 'Case Study',
@@ -176,8 +176,8 @@ const q4Schedule = [
       'Share rate > 15%',
       'Lead generation from case study'
     ],
-    mailjetTemplateId: 123462, // TODO: Update with actual template
-    totalRecipients: 2500
+    mailjetTemplateId: 123456 // TODO: Update with actual template
+    
   },
   {
     name: 'Year in Review',
@@ -201,8 +201,8 @@ const q4Schedule = [
       'Video views > 500',
       'Social engagement rate > 5%'
     ],
-    mailjetTemplateId: 123463, // TODO: Update with actual template
-    totalRecipients: 3000
+    mailjetTemplateId: 123456 // TODO: Update with actual template
+    
   }
 ];
 
@@ -217,7 +217,7 @@ async function importSchedule() {
       console.log(`📅 Creating campaign: ${release.name}`);
       console.log(`   Release Date: ${release.releaseDate}`);
       console.log(`   Theme: ${release.theme}`);
-      console.log(`   Recipients: ${release.totalRecipients}`);
+      console.log(`   Stakeholder Model: Leadership (1,000) → Compliance (500) → Users (1,500)`);
 
       // Parse release date
       const releaseDate = new Date(release.releaseDate);
@@ -229,10 +229,12 @@ async function importSchedule() {
       const round3Date = new Date(releaseDate);
       round3Date.setDate(round3Date.getDate() + 14);
 
-      // Distribute recipients across 3 rounds
-      const recipientsPerRound = Math.floor(release.totalRecipients / 3);
+      // Stakeholder segmentation model: ~3,000 total recipients
+      const round1Recipients = 1000;  // Leadership
+      const round2Recipients = 500;   // Compliance
+      const round3Recipients = 1500;  // Users
 
-      // Create 3 campaign schedules
+      // Create 3 campaign schedules with stakeholder segmentation
       const rounds = [
         {
           campaign_name: release.name,
@@ -240,10 +242,12 @@ async function importSchedule() {
           scheduled_date: round1Date,
           scheduled_time: '09:00',
           list_id_prefix: release.name.toLowerCase().replace(/\s+/g, '-'),
+          stakeholder_group: 'Leadership',
+          mailjet_list_name: `${release.name} - Leadership`,
           mailjet_list_id: null, // TODO: Create MailJet lists
           mailjet_template_id: release.mailjetTemplateId,
-          recipient_count: recipientsPerRound,
-          subject_line: `${release.name} - Round 1`,
+          recipient_count: round1Recipients,
+          subject_line: `[Leadership] ${release.name}`,
           sender_name: 'Digital Clipboard',
           sender_email: 'hello@digitalclipboard.com',
           notification_channel: '#_traction',
@@ -251,7 +255,7 @@ async function importSchedule() {
           theme: release.theme,
           key_messages: release.keyMessages,
           channels: release.channels,
-          target_audience: release.targetAudience,
+          target_audience: 'Leadership - Practice owners, partners, senior management',
           success_metrics: release.successMetrics
         },
         {
@@ -260,10 +264,12 @@ async function importSchedule() {
           scheduled_date: round2Date,
           scheduled_time: '09:00',
           list_id_prefix: release.name.toLowerCase().replace(/\s+/g, '-'),
+          stakeholder_group: 'Compliance',
+          mailjet_list_name: `${release.name} - Compliance`,
           mailjet_list_id: null, // TODO: Create MailJet lists
           mailjet_template_id: release.mailjetTemplateId,
-          recipient_count: recipientsPerRound,
-          subject_line: `${release.name} - Round 2`,
+          recipient_count: round2Recipients,
+          subject_line: `[Compliance] ${release.name}`,
           sender_name: 'Digital Clipboard',
           sender_email: 'hello@digitalclipboard.com',
           notification_channel: '#_traction',
@@ -271,7 +277,7 @@ async function importSchedule() {
           theme: release.theme,
           key_messages: release.keyMessages,
           channels: release.channels,
-          target_audience: release.targetAudience,
+          target_audience: 'Compliance - Compliance officers, operations managers',
           success_metrics: release.successMetrics
         },
         {
@@ -280,10 +286,12 @@ async function importSchedule() {
           scheduled_date: round3Date,
           scheduled_time: '09:00',
           list_id_prefix: release.name.toLowerCase().replace(/\s+/g, '-'),
+          stakeholder_group: 'Users',
+          mailjet_list_name: `${release.name} - Users`,
           mailjet_list_id: null, // TODO: Create MailJet lists
           mailjet_template_id: release.mailjetTemplateId,
-          recipient_count: recipientsPerRound,
-          subject_line: `${release.name} - Round 3`,
+          recipient_count: round3Recipients,
+          subject_line: `${release.name}`,
           sender_name: 'Digital Clipboard',
           sender_email: 'hello@digitalclipboard.com',
           notification_channel: '#_traction',
@@ -291,7 +299,7 @@ async function importSchedule() {
           theme: release.theme,
           key_messages: release.keyMessages,
           channels: release.channels,
-          target_audience: release.targetAudience,
+          target_audience: 'Users - Active advisers, PAs, end users',
           success_metrics: release.successMetrics
         }
       ];
@@ -303,7 +311,10 @@ async function importSchedule() {
         });
       }
 
-      console.log(`   ✅ Created 3 rounds (${round1Date.toISOString().split('T')[0]}, ${round2Date.toISOString().split('T')[0]}, ${round3Date.toISOString().split('T')[0]})\n`);
+      console.log(`   ✅ Created 3 rounds:`);
+      console.log(`      Round 1 (Leadership): ${round1Date.toISOString().split('T')[0]} - ${round1Recipients} recipients`);
+      console.log(`      Round 2 (Compliance): ${round2Date.toISOString().split('T')[0]} - ${round2Recipients} recipients`);
+      console.log(`      Round 3 (Users): ${round3Date.toISOString().split('T')[0]} - ${round3Recipients} recipients\n`);
       imported++;
 
     } catch (error) {
