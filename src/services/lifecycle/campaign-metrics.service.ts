@@ -3,9 +3,8 @@
  * Collects and stores campaign metrics from MailJet API
  */
 
-import { PrismaClient, LifecycleCampaignMetrics } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { LifecycleCampaignMetrics } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 
 export interface CampaignMetricsData {
   processed: number;

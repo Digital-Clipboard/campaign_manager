@@ -1,12 +1,11 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { TimelineService } from '@/services/timeline/timeline.service';
 import { CacheService } from '@/services/cache/cache.service';
 import { authMiddleware } from '@/api/middleware/auth';
 import { logger } from '@/utils/logger';
 
 export async function timelineRoutes(fastify: FastifyInstance) {
-  const prisma = new PrismaClient();
   const cache = new CacheService();
   const timelineService = new TimelineService(prisma, cache);
 

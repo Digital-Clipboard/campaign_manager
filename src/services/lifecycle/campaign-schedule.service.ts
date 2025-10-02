@@ -3,9 +3,8 @@
  * Manages lifecycle campaign schedules with automated batch splitting
  */
 
-import { PrismaClient, LifecycleCampaignSchedule, CampaignStatus } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { LifecycleCampaignSchedule, CampaignStatus } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 
 export interface BatchSchedule {
   round: number;

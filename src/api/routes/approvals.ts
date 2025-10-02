@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { ApprovalService } from '@/services/approval/approval.service';
 import { CacheService } from '@/services/cache/cache.service';
 import { NotificationService } from '@/services/notification/notification.service';
@@ -15,7 +15,6 @@ import {
 import { logger } from '@/utils/logger';
 
 export async function approvalRoutes(fastify: FastifyInstance) {
-  const prisma = new PrismaClient();
   const cache = new CacheService();
   const notificationService = new NotificationService(prisma);
   const approvalService = new ApprovalService(prisma, cache, notificationService);

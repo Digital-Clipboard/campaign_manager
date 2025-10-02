@@ -1,10 +1,8 @@
 import { Queue, Worker, Job } from 'bullmq';
 import { queueRedis } from '../utils/redis';
 import { logger } from '../utils/logger';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import axios from 'axios';
-
-const prisma = new PrismaClient();
 
 // Bounce cleanup job data interface
 export interface BounceCleanupJobData {

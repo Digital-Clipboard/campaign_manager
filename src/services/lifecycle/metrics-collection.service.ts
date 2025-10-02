@@ -3,8 +3,9 @@
  * Collects and stores campaign metrics from MailJet with AI analysis
  */
 
-import { PrismaClient, LifecycleCampaignSchedule, LifecycleCampaignMetrics } from '@prisma/client';
+import { LifecycleCampaignSchedule, LifecycleCampaignMetrics } from '@prisma/client';
 import { logger } from '@/utils/logger';
+import { prisma } from '@/lib/prisma';
 import { MailjetAgentClient } from '@/integrations/mcp-clients/mailjet-agent-client';
 import {
   DeliveryAnalysisAgent,
@@ -15,8 +16,6 @@ import {
   type DeliveryMetrics
 } from './agents';
 import { CampaignMetricsService } from './campaign-metrics.service';
-
-const prisma = new PrismaClient();
 
 export interface MetricsCollectionResult {
   metrics: LifecycleCampaignMetrics;

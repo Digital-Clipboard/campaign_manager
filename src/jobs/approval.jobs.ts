@@ -1,5 +1,5 @@
 import { Queue, Worker } from 'bullmq';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { ApprovalService } from '@/services/approval/approval.service';
 import { CacheService } from '@/services/cache/cache.service';
 import { NotificationService } from '@/services/notification/notification.service';
@@ -32,7 +32,6 @@ export const approvalQueue = new Queue('approvals', {
 
 // Worker to process approval jobs
 export const approvalWorker = new Worker('approvals', async (job) => {
-  const prisma = new PrismaClient();
   const cache = new CacheService();
   const notificationService = new NotificationService(prisma);
   const approvalService = new ApprovalService(prisma, cache, notificationService);

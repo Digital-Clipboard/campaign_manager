@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { DashboardService } from '@/services/dashboard/dashboard.service';
 import { AnalyticsService } from '@/services/dashboard/analytics.service';
 import { CacheService } from '@/services/cache/cache.service';
@@ -45,7 +45,6 @@ const analyticsQuerySchema = z.object({
 });
 
 export async function dashboardRoutes(fastify: FastifyInstance) {
-  const prisma = new PrismaClient();
   const cacheService = new CacheService();
   const dashboardService = new DashboardService(prisma, cacheService);
   const analyticsService = new AnalyticsService(prisma, cacheService);

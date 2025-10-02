@@ -3,14 +3,13 @@
  * Handles all 5 lifecycle notification stages with Slack Block Kit formatting
  */
 
-import { PrismaClient, NotificationStage, NotificationStatus } from '@prisma/client';
+import { NotificationStage, NotificationStatus } from '@prisma/client';
 import { logger } from '@/utils/logger';
+import { prisma } from '@/lib/prisma';
 import { SlackManagerClient } from '@/integrations/mcp-clients/slack-manager-client';
 import { NotificationLogService } from './notification-log.service';
 import { PreFlightVerificationService, type PreFlightResult } from './preflight-verification.service';
 import { MetricsCollectionService, type MetricsCollectionResult } from './metrics-collection.service';
-
-const prisma = new PrismaClient();
 
 export interface NotificationContext {
   campaignScheduleId: number;

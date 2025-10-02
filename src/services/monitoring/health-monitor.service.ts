@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { Redis } from 'ioredis';
 import { logger } from '@/utils/logger';
 import { NotificationService } from '@/services/notification.service';
@@ -55,7 +55,6 @@ export interface AlertRule {
 }
 
 export class HealthMonitorService {
-  private prisma: PrismaClient;
   private redis: Redis;
   private notificationService: NotificationService;
   private slackClient: SlackManagerClient;
@@ -65,9 +64,8 @@ export class HealthMonitorService {
   private alertRules: AlertRule[] = [];
 
   constructor() {
-    this.prisma = new PrismaClient();
     this.redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
-    this.notificationService = new NotificationService();
+    this.notificationService = new NotificationService(prisma);
     this.slackClient = new SlackManagerClient();
     this.startTime = new Date();
 
@@ -149,7 +147,7 @@ export class HealthMonitorService {
   private async checkDatabase(): Promise<HealthCheck> {
     const start = Date.now();
     try {
-      await this.prisma.$queryRaw`SELECT 1`;
+      await prisma.$queryRaw`SELECT 1`;
       const responseTime = Date.now() - start;
 
       return {
@@ -576,7 +574,7 @@ ${health.services.map(s => `- ${s.service}: ${s.status} (${s.responseTime}ms)`).
 
   private async storeAlert(rule: AlertRule, health: SystemHealth): Promise<void> {
     try {
-      await this.prisma.systemAlert.create({
+      await prisma.systemAlert.create({
         data: {
           ruleId: rule.id,
           ruleName: rule.name,
@@ -650,7 +648,7 @@ ${health.services.map(s => `- ${s.service}: ${s.status} (${s.responseTime}ms)`).
     try {
       const since = new Date(Date.now() - hours * 60 * 60 * 1000);
 
-      return await this.prisma.systemAlert.findMany({
+      return await prisma.systemAlert.findMany({
         where: {
           createdAt: { gte: since }
         },

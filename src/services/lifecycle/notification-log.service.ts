@@ -3,9 +3,8 @@
  * Tracks all lifecycle notification attempts and status
  */
 
-import { PrismaClient, LifecycleNotificationLog, NotificationStage, NotificationStatus } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { LifecycleNotificationLog, NotificationStage, NotificationStatus } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 
 export class NotificationLogService {
   /**

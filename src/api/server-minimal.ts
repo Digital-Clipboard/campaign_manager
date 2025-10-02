@@ -1,11 +1,12 @@
 import fastify from 'fastify';
-import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
+import { prisma } from '../lib/prisma';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
 import { CampaignSlackNotifications } from '../services/slack/campaign-notifications';
 import { SlackManagerMCPService } from '../services/slack-manager-mcp.service';
 import { GeminiService, type ActivityData } from '../services/ai/gemini.service';
+import lifecycleRoutes from './routes/lifecycle';
 
 // Extend FastifyRequest type to include startTime
 declare module 'fastify' {
@@ -48,9 +49,6 @@ export async function createServer() {
       } : undefined
     },
   });
-
-  // Initialize Prisma
-  const prisma = new PrismaClient();
 
   // MailJet MCP helper function
   const generateMailjetToken = () => {
@@ -156,6 +154,9 @@ export async function createServer() {
       documentation: '/api/docs'
     };
   });
+
+  // Register Lifecycle API routes
+  await server.register(lifecycleRoutes, { prefix: '/api/lifecycle' });
 
   // Enhanced MCP endpoint with database functionality
   server.post('/mcp', async (request, reply) => {

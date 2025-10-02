@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { TeamService } from '@/services/team/team.service';
 import { CacheService } from '@/services/cache/cache.service';
 import { authMiddleware } from '@/api/middleware/auth';
@@ -13,7 +13,6 @@ import {
 import { logger } from '@/utils/logger';
 
 export async function teamRoutes(fastify: FastifyInstance) {
-  const prisma = new PrismaClient();
   const cache = new CacheService();
   const teamService = new TeamService(prisma, cache);
 

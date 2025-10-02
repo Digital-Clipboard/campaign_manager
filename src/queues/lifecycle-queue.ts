@@ -6,6 +6,7 @@
 import Bull from 'bull';
 import { logger } from '@/utils/logger';
 import { CampaignOrchestratorService } from '@/services/lifecycle';
+import { ListMaintenanceOrchestrator } from '@/services/lists/list-maintenance-orchestrator.service';
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 
@@ -51,6 +52,13 @@ export interface WrapUpJobData {
   campaignScheduleId: number;
   campaignName: string;
   roundNumber: number;
+}
+
+export interface ListMaintenanceJobData {
+  campaignScheduleId: number;
+  campaignName: string;
+  roundNumber: number;
+  listId: string;
 }
 
 // Process Pre-Launch notifications (T-21h)
@@ -118,6 +126,25 @@ lifecycleQueue.process('wrapup', async (job: Bull.Job<WrapUpJobData>) => {
 
   if (!result.success) {
     throw new Error(`Wrap-Up failed: ${result.error}`);
+  }
+
+  return result;
+});
+
+// Process List Maintenance (T+24h - Stage 6)
+lifecycleQueue.process('list-maintenance', async (job: Bull.Job<ListMaintenanceJobData>) => {
+  logger.info('[LifecycleQueue] Processing List Maintenance job', job.data);
+
+  const maintenanceOrchestrator = new ListMaintenanceOrchestrator();
+  const result = await maintenanceOrchestrator.runPostCampaignMaintenance({
+    campaignScheduleId: job.data.campaignScheduleId,
+    listId: job.data.listId,
+    campaignName: job.data.campaignName,
+    roundNumber: job.data.roundNumber
+  });
+
+  if (!result.success) {
+    throw new Error(`List maintenance failed: ${result.error}`);
   }
 
   return result;

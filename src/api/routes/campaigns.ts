@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { CampaignService } from '@/services/campaign/campaign.service';
 import { CacheService } from '@/services/cache/cache.service';
 import { authMiddleware } from '@/api/middleware/auth';
@@ -11,7 +11,6 @@ import {
 import { logger } from '@/utils/logger';
 
 export async function campaignRoutes(fastify: FastifyInstance) {
-  const prisma = new PrismaClient();
   const cache = new CacheService();
   const campaignService = new CampaignService(prisma, cache);
 
