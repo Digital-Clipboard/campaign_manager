@@ -466,4 +466,450 @@ export class SlackManagerClient extends BaseMCPClient {
       return false;
     }
   }
+
+  // ============================================
+  // LIFECYCLE-SPECIFIC NOTIFICATION METHODS
+  // ============================================
+
+  /**
+   * Pre-Launch Notification (T-21h)
+   * Sent when campaign is scheduled
+   */
+  async sendPreLaunchNotification(params: {
+    campaignName: string;
+    roundNumber: number;
+    scheduledDate: Date;
+    scheduledTime: string;
+    recipientCount: number;
+    listName: string;
+  }): Promise<SlackMessage> {
+    const channelId = await this.getChannelId(process.env.SLACK_LIFECYCLE_CHANNEL || 'lifecycle-campaigns');
+    if (!channelId) throw new Error('Lifecycle channel not found');
+
+    const blocks = [
+      {
+        type: 'header',
+        text: {
+          type: 'plain_text',
+          text: `📋 Pre-Launch: ${params.campaignName} (Round ${params.roundNumber})`,
+          emoji: true
+        }
+      },
+      {
+        type: 'section',
+        fields: [
+          {
+            type: 'mrkdwn',
+            text: `*Scheduled:*\n${params.scheduledDate.toLocaleDateString()} at ${params.scheduledTime} UTC`
+          },
+          {
+            type: 'mrkdwn',
+            text: `*Recipients:*\n${params.recipientCount.toLocaleString()}`
+          },
+          {
+            type: 'mrkdwn',
+            text: `*List:*\n${params.listName}`
+          },
+          {
+            type: 'mrkdwn',
+            text: `*Status:*\n✅ Scheduled`
+          }
+        ]
+      },
+      {
+        type: 'context',
+        elements: [
+          {
+            type: 'mrkdwn',
+            text: '⏰ Next notification in ~18 hours (Pre-Flight Check)'
+          }
+        ]
+      }
+    ];
+
+    return this.sendMessage(channelId, `Pre-Launch: ${params.campaignName}`, blocks);
+  }
+
+  /**
+   * Pre-Flight Notification (T-3.25h)
+   * Sent with AI analysis and verification results
+   */
+  async sendPreFlightNotification(params: {
+    campaignName: string;
+    roundNumber: number;
+    scheduledDate: Date;
+    scheduledTime: string;
+    recipientCount: number;
+    listQualityScore: number;
+    previousRoundMetrics?: {
+      deliveryRate: number;
+      bounceRate: number;
+      openRate?: number;
+    };
+    readinessChecks: {
+      hasSubject: boolean;
+      hasSender: boolean;
+      hasContactList: boolean;
+      hasContent: boolean;
+      listNotEmpty: boolean;
+      noBlockedContacts: boolean;
+    };
+    issues: Array<{ severity: 'error' | 'warning' | 'info'; message: string }>;
+    aiRecommendations: string[];
+  }): Promise<SlackMessage> {
+    const channelId = await this.getChannelId(process.env.SLACK_LIFECYCLE_CHANNEL || 'lifecycle-campaigns');
+    if (!channelId) throw new Error('Lifecycle channel not found');
+
+    const allChecksPassed = Object.values(params.readinessChecks).every(v => v === true);
+    const hasErrors = params.issues.some(i => i.severity === 'error');
+
+    const blocks: any[] = [
+      {
+        type: 'header',
+        text: {
+          type: 'plain_text',
+          text: `✈️ Pre-Flight: ${params.campaignName} (Round ${params.roundNumber})`,
+          emoji: true
+        }
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*Campaign Status:* ${allChecksPassed && !hasErrors ? '✅ Ready to Launch' : '⚠️ Issues Detected'}`
+        }
+      }
+    ];
+
+    // Readiness checks
+    const checksText = Object.entries(params.readinessChecks)
+      .map(([key, value]) => `${value ? '✅' : '❌'} ${key.replace(/([A-Z])/g, ' $1').trim()}`)
+      .join('\n');
+
+    blocks.push({
+      type: 'section',
+      fields: [
+        {
+          type: 'mrkdwn',
+          text: `*Readiness Checks:*\n${checksText}`
+        },
+        {
+          type: 'mrkdwn',
+          text: `*List Quality Score:*\n${params.listQualityScore}/100`
+        }
+      ]
+    });
+
+    // Previous round comparison (if available)
+    if (params.previousRoundMetrics) {
+      blocks.push({
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*Round ${params.roundNumber - 1} Performance:*\n• Delivery: ${params.previousRoundMetrics.deliveryRate.toFixed(1)}%\n• Bounce: ${params.previousRoundMetrics.bounceRate.toFixed(1)}%${params.previousRoundMetrics.openRate ? `\n• Open: ${params.previousRoundMetrics.openRate.toFixed(1)}%` : ''}`
+        }
+      });
+    }
+
+    // Issues (if any)
+    if (params.issues.length > 0) {
+      const issuesText = params.issues
+        .map(i => {
+          const icon = i.severity === 'error' ? '🔴' : i.severity === 'warning' ? '🟡' : 'ℹ️';
+          return `${icon} ${i.message}`;
+        })
+        .join('\n');
+
+      blocks.push({
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*Issues:*\n${issuesText}`
+        }
+      });
+    }
+
+    // AI Recommendations
+    if (params.aiRecommendations.length > 0) {
+      blocks.push({
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*AI Recommendations:*\n${params.aiRecommendations.map(r => `• ${r}`).join('\n')}`
+        }
+      });
+    }
+
+    blocks.push({
+      type: 'context',
+      elements: [
+        {
+          type: 'mrkdwn',
+          text: '⏰ Next notification in ~3 hours (Launch Warning)'
+        }
+      ]
+    });
+
+    return this.sendMessage(channelId, `Pre-Flight: ${params.campaignName}`, blocks);
+  }
+
+  /**
+   * Launch Warning Notification (T-15min)
+   * Final warning before launch
+   */
+  async sendLaunchWarningNotification(params: {
+    campaignName: string;
+    roundNumber: number;
+    scheduledTime: string;
+    recipientCount: number;
+    finalChecksStatus: 'ready' | 'warning' | 'blocked';
+  }): Promise<SlackMessage> {
+    const channelId = await this.getChannelId(process.env.SLACK_LIFECYCLE_CHANNEL || 'lifecycle-campaigns');
+    if (!channelId) throw new Error('Lifecycle channel not found');
+
+    const statusEmoji = params.finalChecksStatus === 'ready' ? '🚀' : params.finalChecksStatus === 'warning' ? '⚠️' : '🛑';
+    const statusText = params.finalChecksStatus === 'ready' ? 'Ready to Launch' : params.finalChecksStatus === 'warning' ? 'Warning - Review Needed' : 'BLOCKED';
+
+    const blocks = [
+      {
+        type: 'header',
+        text: {
+          type: 'plain_text',
+          text: `${statusEmoji} Launch Warning: ${params.campaignName}`,
+          emoji: true
+        }
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*Campaign launches in 15 minutes!*\nRound ${params.roundNumber} | ${params.recipientCount.toLocaleString()} recipients`
+        }
+      },
+      {
+        type: 'section',
+        fields: [
+          {
+            type: 'mrkdwn',
+            text: `*Launch Time:*\n${params.scheduledTime} UTC`
+          },
+          {
+            type: 'mrkdwn',
+            text: `*Status:*\n${statusText}`
+          }
+        ]
+      }
+    ];
+
+    if (params.finalChecksStatus === 'blocked') {
+      blocks.push({
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '🛑 *CAMPAIGN BLOCKED* - Critical issues detected. Launch will not proceed automatically.'
+        }
+      });
+    }
+
+    blocks.push({
+      type: 'context',
+      elements: [
+        {
+          type: 'mrkdwn',
+          text: '⏰ Launch confirmation in 15 minutes'
+        }
+      ]
+    });
+
+    return this.sendMessage(channelId, `⚠️ LAUNCH WARNING: ${params.campaignName}`, blocks);
+  }
+
+  /**
+   * Launch Confirmation Notification (T+0)
+   * Sent immediately after launch
+   */
+  async sendLaunchConfirmationNotification(params: {
+    campaignName: string;
+    roundNumber: number;
+    launchedAt: Date;
+    recipientCount: number;
+    queuedCount: number;
+    messageId: string;
+    mailjetCampaignId: bigint;
+  }): Promise<SlackMessage> {
+    const channelId = await this.getChannelId(process.env.SLACK_LIFECYCLE_CHANNEL || 'lifecycle-campaigns');
+    if (!channelId) throw new Error('Lifecycle channel not found');
+
+    const blocks = [
+      {
+        type: 'header',
+        text: {
+          type: 'plain_text',
+          text: `🎯 LAUNCHED: ${params.campaignName} (Round ${params.roundNumber})`,
+          emoji: true
+        }
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `Campaign successfully launched at ${params.launchedAt.toLocaleTimeString()} UTC`
+        }
+      },
+      {
+        type: 'section',
+        fields: [
+          {
+            type: 'mrkdwn',
+            text: `*Total Recipients:*\n${params.recipientCount.toLocaleString()}`
+          },
+          {
+            type: 'mrkdwn',
+            text: `*Queued for Delivery:*\n${params.queuedCount.toLocaleString()}`
+          },
+          {
+            type: 'mrkdwn',
+            text: `*Campaign ID:*\n${params.mailjetCampaignId.toString()}`
+          },
+          {
+            type: 'mrkdwn',
+            text: `*Message ID:*\n\`${params.messageId}\``
+          }
+        ]
+      },
+      {
+        type: 'context',
+        elements: [
+          {
+            type: 'mrkdwn',
+            text: '⏰ Wrap-up report in 30 minutes'
+          }
+        ]
+      }
+    ];
+
+    return this.sendMessage(channelId, `🎯 LAUNCHED: ${params.campaignName}`, blocks);
+  }
+
+  /**
+   * Wrap-Up Notification (T+30min)
+   * Sent with final metrics and AI analysis
+   */
+  async sendWrapUpNotification(params: {
+    campaignName: string;
+    roundNumber: number;
+    metrics: {
+      processed: number;
+      delivered: number;
+      bounced: number;
+      hardBounces: number;
+      softBounces: number;
+      deliveryRate: number;
+      bounceRate: number;
+    };
+    comparisonToPrevious?: {
+      deliveryRateDelta: number;
+      bounceRateDelta: number;
+    };
+    aiInsights: string[];
+    recommendations: string[];
+    nextRound?: {
+      roundNumber: number;
+      scheduledDate: Date;
+      scheduledTime: string;
+    };
+  }): Promise<SlackMessage> {
+    const channelId = await this.getChannelId(process.env.SLACK_LIFECYCLE_CHANNEL || 'lifecycle-campaigns');
+    if (!channelId) throw new Error('Lifecycle channel not found');
+
+    const blocks: any[] = [
+      {
+        type: 'header',
+        text: {
+          type: 'plain_text',
+          text: `📊 Wrap-Up: ${params.campaignName} (Round ${params.roundNumber})`,
+          emoji: true
+        }
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '*Campaign Metrics (30min post-launch):*'
+        }
+      },
+      {
+        type: 'section',
+        fields: [
+          {
+            type: 'mrkdwn',
+            text: `*Processed:*\n${params.metrics.processed.toLocaleString()}`
+          },
+          {
+            type: 'mrkdwn',
+            text: `*Delivered:*\n${params.metrics.delivered.toLocaleString()} (${params.metrics.deliveryRate.toFixed(1)}%)`
+          },
+          {
+            type: 'mrkdwn',
+            text: `*Bounced:*\n${params.metrics.bounced.toLocaleString()} (${params.metrics.bounceRate.toFixed(1)}%)`
+          },
+          {
+            type: 'mrkdwn',
+            text: `*Hard Bounces:*\n${params.metrics.hardBounces.toLocaleString()}`
+          }
+        ]
+      }
+    ];
+
+    // Comparison to previous round
+    if (params.comparisonToPrevious) {
+      const deliveryTrend = params.comparisonToPrevious.deliveryRateDelta > 0 ? '📈' : params.comparisonToPrevious.deliveryRateDelta < 0 ? '📉' : '➡️';
+      const bounceTrend = params.comparisonToPrevious.bounceRateDelta < 0 ? '📈' : params.comparisonToPrevious.bounceRateDelta > 0 ? '📉' : '➡️';
+
+      blocks.push({
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*Comparison to Round ${params.roundNumber - 1}:*\n${deliveryTrend} Delivery: ${params.comparisonToPrevious.deliveryRateDelta > 0 ? '+' : ''}${params.comparisonToPrevious.deliveryRateDelta.toFixed(1)}%\n${bounceTrend} Bounce: ${params.comparisonToPrevious.bounceRateDelta > 0 ? '+' : ''}${params.comparisonToPrevious.bounceRateDelta.toFixed(1)}%`
+        }
+      });
+    }
+
+    // AI Insights
+    if (params.aiInsights.length > 0) {
+      blocks.push({
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*AI Insights:*\n${params.aiInsights.map(i => `• ${i}`).join('\n')}`
+        }
+      });
+    }
+
+    // Recommendations
+    if (params.recommendations.length > 0) {
+      blocks.push({
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*Recommendations:*\n${params.recommendations.map(r => `• ${r}`).join('\n')}`
+        }
+      });
+    }
+
+    // Next round preview
+    if (params.nextRound) {
+      blocks.push({
+        type: 'context',
+        elements: [
+          {
+            type: 'mrkdwn',
+            text: `📅 Round ${params.nextRound.roundNumber} scheduled for ${params.nextRound.scheduledDate.toLocaleDateString()} at ${params.nextRound.scheduledTime} UTC`
+          }
+        ]
+      });
+    }
+
+    return this.sendMessage(channelId, `📊 Wrap-Up: ${params.campaignName}`, blocks);
+  }
 }

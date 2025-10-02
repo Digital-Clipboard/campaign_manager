@@ -45,6 +45,7 @@ async function realPostLaunchAssessment() {
     // Known campaign IDs from MailJet
     const ROUND_1_CAMPAIGN_ID = 7758947928;
     const ROUND_2_CAMPAIGN_ID = 7758985090;
+    const ROUND_3_CAMPAIGN_ID = 7759004874;
 
     console.log(`📋 Fetching campaigns:`);
     console.log(`   Round 1: Campaign ID ${ROUND_1_CAMPAIGN_ID}`);

@@ -22,6 +22,17 @@ export interface EmailCampaign {
   sentAt?: Date;
 }
 
+export interface CampaignDraft {
+  id: bigint;
+  campaignId?: bigint;
+  subject: string;
+  senderName: string;
+  senderEmail: string;
+  contactListId: bigint;
+  status: 'draft' | 'programmed' | 'sent';
+  createdAt: Date;
+}
+
 export interface EmailStatistics {
   campaignId: string;
   sent: number;
@@ -37,6 +48,23 @@ export interface EmailStatistics {
   openRate: number;
   clickRate: number;
   bounceRate: number;
+}
+
+export interface DetailedCampaignStatistics {
+  campaignId: bigint;
+  processed: number;
+  delivered: number;
+  bounced: number;
+  hardBounces: number;
+  softBounces: number;
+  blocked: number;
+  queued: number;
+  opened: number;
+  clicked: number;
+  unsubscribed: number;
+  complained: number;
+  sendStartAt?: Date;
+  sendEndAt?: Date;
 }
 
 export interface ContactList {
@@ -380,5 +408,105 @@ export class MailjetAgentClient extends BaseMCPClient {
     recommendations: string[];
   }> {
     return this.callTool('get_email_deliverability');
+  }
+
+  // ============================================
+  // LIFECYCLE-SPECIFIC METHODS
+  // ============================================
+
+  /**
+   * Get campaign draft by ID
+   * Used in Pre-Flight verification stage
+   */
+  async getCampaignDraft(draftId: bigint): Promise<CampaignDraft> {
+    return this.callTool<CampaignDraft>('get_campaign_draft', {
+      draft_id: draftId.toString()
+    });
+  }
+
+  /**
+   * Get detailed campaign statistics for lifecycle metrics
+   * Returns all metrics needed for AI analysis
+   */
+  async getDetailedCampaignStatistics(
+    campaignId: bigint
+  ): Promise<DetailedCampaignStatistics> {
+    return this.callTool<DetailedCampaignStatistics>('get_detailed_campaign_statistics', {
+      campaign_id: campaignId.toString()
+    });
+  }
+
+  /**
+   * Send a campaign immediately
+   * Used in Launch Confirmation stage
+   */
+  async sendCampaignNow(campaignId: bigint): Promise<{
+    success: boolean;
+    messageId: string;
+    queuedCount: number;
+  }> {
+    return this.callTool('send_campaign_now', {
+      campaign_id: campaignId.toString()
+    });
+  }
+
+  /**
+   * Verify campaign is ready to send
+   * Pre-flight checks before launch
+   */
+  async verifyCampaignReadiness(draftId: bigint): Promise<{
+    isReady: boolean;
+    issues: Array<{
+      severity: 'error' | 'warning' | 'info';
+      message: string;
+      field?: string;
+    }>;
+    checks: {
+      hasSubject: boolean;
+      hasSender: boolean;
+      hasContactList: boolean;
+      hasContent: boolean;
+      listNotEmpty: boolean;
+      noBlockedContacts: boolean;
+    };
+  }> {
+    return this.callTool('verify_campaign_readiness', {
+      draft_id: draftId.toString()
+    });
+  }
+
+  /**
+   * Get list statistics for list quality analysis
+   */
+  async getListStatistics(listId: bigint): Promise<{
+    listId: bigint;
+    totalContacts: number;
+    subscribedContacts: number;
+    unsubscribedContacts: number;
+    blockedContacts: number;
+    recentBounces: number;
+    listHealth: number; // 0-100 score
+  }> {
+    return this.callTool('get_list_statistics', {
+      list_id: listId.toString()
+    });
+  }
+
+  /**
+   * Get sender reputation score
+   */
+  async getSenderReputation(senderEmail: string): Promise<{
+    email: string;
+    reputationScore: number; // 0-100
+    totalSent: number;
+    totalDelivered: number;
+    totalBounced: number;
+    totalComplaints: number;
+    recentTrend: 'improving' | 'stable' | 'declining';
+    recommendations: string[];
+  }> {
+    return this.callTool('get_sender_reputation', {
+      sender_email: senderEmail
+    });
   }
 }

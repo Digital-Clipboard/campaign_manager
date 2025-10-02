@@ -98,26 +98,23 @@ users = getAllUsers().sortBy('ContactID');
 round2Users = users.slice(1000, 2000); // Skip first 1000
 ```
 
-### Round 3: Client Letter Campaign (Planned)
-- **List Name**: campaign_batch_003 (to be created)
-- **MailJet List ID**: TBD
-- **User Range**: 2,001-3,000
-- **Contact ID Range**: ~1049602519 to TBD
-- **Status**: ⏳ Planned
+### Round 3: Client Letter Campaign (Setup - FINAL ROUND)
+- **List Name**: campaign_batch_003
+- **MailJet List ID**: 10503192
+- **User Range**: 2,001-3,529 (ALL remaining - 1,529 users)
+- **Contact ID Range**: 1049602519 to 3727054106
+- **Status**: 🟡 List Ready - Campaign Pending
+- **Created**: October 1, 2025
 - **Launch Date**: October 2, 2025, 9:15 AM UTC
 
 **Selection Criteria:**
 ```javascript
 // Pseudocode
 users = getAllUsers().sortBy('ContactID');
-round3Users = users.slice(2000, 3000); // Skip first 2000
+round3Users = users.slice(2000); // Take ALL remaining users (no upper limit)
 ```
 
-### Round 4: Client Letter Campaign (Future)
-- **User Range**: 3,001+
-- **Status**: ⏳ Planned
-- **Note**: Remaining 529+ users (as of Sept 30, 2025)
-- **Strategy**: May combine with newly registered users or send as smaller batch
+**Note**: Round 3 completes the entire user base (3,529 total users). No Round 4 needed with current users.
 
 ---
 
