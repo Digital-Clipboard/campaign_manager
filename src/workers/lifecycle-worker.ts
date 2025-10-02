@@ -3,8 +3,8 @@
  * Background worker process for handling lifecycle queue jobs
  */
 
-import { logger } from '@/utils/logger';
-import lifecycleQueue from '@/queues/lifecycle-queue';
+import { logger } from '../utils/logger';
+import lifecycleQueue from '../queues/lifecycle-queue';
 
 // The queue processors are loaded when the module is imported
 // Bull will automatically start processing jobs
