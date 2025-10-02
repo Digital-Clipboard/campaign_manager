@@ -509,4 +509,138 @@ export class MailjetAgentClient extends BaseMCPClient {
       sender_email: senderEmail
     });
   }
+
+  // ============================================
+  // LIST MANAGEMENT METHODS
+  // ============================================
+
+  /**
+   * Get all contacts from a MailJet list
+   */
+  async getListContacts(listId: bigint): Promise<Array<{
+    id: bigint;
+    email: string;
+    name?: string;
+    isActive: boolean;
+  }>> {
+    return this.callTool('get_list_contacts', {
+      list_id: listId.toString()
+    });
+  }
+
+  /**
+   * Add multiple contacts to a MailJet list
+   */
+  async addContactsToMailjetList(
+    listId: bigint,
+    contacts: Array<{
+      email: string;
+      name?: string;
+      properties?: Record<string, any>;
+    }>
+  ): Promise<{
+    added: number;
+    failed: number;
+    errors?: Array<{ email: string; error: string }>;
+  }> {
+    return this.callTool('add_contacts_to_mailjet_list', {
+      list_id: listId.toString(),
+      contacts
+    });
+  }
+
+  /**
+   * Remove multiple contacts from a MailJet list
+   */
+  async removeContactsFromMailjetList(
+    listId: bigint,
+    emails: string[]
+  ): Promise<{
+    removed: number;
+    failed: number;
+  }> {
+    return this.callTool('remove_contacts_from_mailjet_list', {
+      list_id: listId.toString(),
+      emails
+    });
+  }
+
+  /**
+   * Get bounce data for a list since a specific date
+   */
+  async getListBounces(
+    listId: bigint,
+    since: Date
+  ): Promise<Array<{
+    contactId: bigint;
+    email: string;
+    bounceType: 'hard' | 'soft' | 'spam';
+    bouncedAt: Date;
+    reason: string;
+  }>> {
+    return this.callTool('get_list_bounces', {
+      list_id: listId.toString(),
+      since: since.toISOString()
+    });
+  }
+
+  /**
+   * Create a new MailJet contact list
+   */
+  async createMailjetList(name: string): Promise<{
+    id: bigint;
+    name: string;
+    createdAt: Date;
+  }> {
+    return this.callTool('create_mailjet_list', {
+      name
+    });
+  }
+
+  /**
+   * Update MailJet list metadata
+   */
+  async updateMailjetList(
+    listId: bigint,
+    updates: { name?: string }
+  ): Promise<{
+    id: bigint;
+    name: string;
+  }> {
+    return this.callTool('update_mailjet_list', {
+      list_id: listId.toString(),
+      ...updates
+    });
+  }
+
+  /**
+   * Get contact by email from MailJet
+   */
+  async getMailjetContactByEmail(email: string): Promise<{
+    id: bigint;
+    email: string;
+    isOptIn: boolean;
+    isExcludedFromCampaigns: boolean;
+  } | null> {
+    return this.callTool('get_mailjet_contact_by_email', {
+      email
+    });
+  }
+
+  /**
+   * Block/unblock contact in MailJet (suppression)
+   */
+  async blockMailjetContact(
+    contactId: bigint,
+    block: boolean
+  ): Promise<{
+    success: boolean;
+    contactId: bigint;
+    isBlocked: boolean;
+  }> {
+    return this.callTool('block_mailjet_contact', {
+      contact_id: contactId.toString(),
+      block
+    });
+  }
 }

@@ -19,6 +19,9 @@ import {
 
 const router = Router();
 
+// Import singleton prisma client
+import { prisma } from '@/lib/prisma';
+
 // Initialize services
 const listService = new ListManagementService();
 const contactService = new ContactService();

@@ -528,3 +528,233 @@ enum NotificationStatus {
   FAILURE
   RETRYING
 }
+
+// ============================================
+// LIST MANAGEMENT MODELS
+// ============================================
+
+/// Contact List - Represents email lists in MailJet
+/// Includes campaign lists, master list, and suppression list
+model ContactList {
+  id             String   @id @default(uuid())
+  name           String
+  mailjetListId  BigInt?  @unique @map("mailjet_list_id") // MailJet list ID (null for local-only lists)
+  type           ListType
+  contactCount   Int      @default(0) @map("contact_count")
+  description    String?
+  isActive       Boolean  @default(true) @map("is_active")
+
+  // List health metrics (cached)
+  lastSyncedAt   DateTime? @map("last_synced_at")
+  bounceRate     Float?    @map("bounce_rate")
+  deliveryRate   Float?    @map("delivery_rate")
+  healthScore    Int?      @map("health_score") // 0-100
+
+  // Metadata
+  metadata       Json?
+
+  // Timestamps
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  memberships    ListMembership[]
+  healthSnapshots ListHealthSnapshot[]
+  maintenanceLogs ListMaintenanceLog[]
+
+  @@index([type])
+  @@index([mailjetListId])
+  @@index([isActive])
+  @@map("contact_lists")
+}
+
+/// Contact - Individual email contact
+model Contact {
+  id               String        @id @default(uuid())
+  email            String        @unique
+  name             String?
+  mailjetContactId BigInt?       @unique @map("mailjet_contact_id")
+  status           ContactStatus @default(ACTIVE)
+
+  // Contact properties
+  firstName        String?       @map("first_name")
+  lastName         String?       @map("last_name")
+  properties       Json?         // Additional custom properties
+
+  // Subscription status
+  isSubscribed     Boolean       @default(true) @map("is_subscribed")
+  unsubscribedAt   DateTime?     @map("unsubscribed_at")
+
+  // Bounce tracking
+  bounceCount      Int           @default(0) @map("bounce_count")
+  lastBounceDate   DateTime?     @map("last_bounce_date")
+  lastBounceType   String?       @map("last_bounce_type") // hard, soft, spam
+
+  // Timestamps
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  memberships      ListMembership[]
+  suppressionHistory SuppressionHistoryEntry[]
+
+  @@index([email])
+  @@index([status])
+  @@index([mailjetContactId])
+  @@index([isSubscribed])
+  @@map("contacts")
+}
+
+/// List Membership - Many-to-many relationship between Contact and ContactList
+model ListMembership {
+  id        String   @id @default(uuid())
+  contactId String   @map("contact_id")
+  listId    String   @map("list_id")
+  position  Int      // FIFO ordering within list
+  isActive  Boolean  @default(true) @map("is_active")
+
+  // Timestamps
+  addedAt   DateTime @default(now()) @map("added_at")
+  removedAt DateTime? @map("removed_at")
+
+  // Relations
+  contact   Contact      @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  list      ContactList  @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@unique([contactId, listId])
+  @@index([listId, position])
+  @@index([contactId])
+  @@map("list_memberships")
+}
+
+/// Suppression History - Audit trail for contact suppressions
+model SuppressionHistoryEntry {
+  id            String   @id @default(uuid())
+  contactId     String   @map("contact_id")
+  reason        String   // hard_bounce, soft_bounce_threshold, spam_complaint, manual, etc.
+  suppressedBy  String   @map("suppressed_by") // 'ai' or user identifier
+  aiRationale   String?  @map("ai_rationale") // AI's explanation for suppression
+  confidence    Float?   // AI confidence score (0-1)
+
+  // Context
+  sourceCampaignId String? @map("source_campaign_id")
+  metadata         Json?   // Additional context
+
+  // Status
+  isActive         Boolean @default(true) @map("is_active")
+  reactivatedAt    DateTime? @map("reactivated_at")
+  reactivatedBy    String? @map("reactivated_by")
+
+  // Timestamps
+  suppressedAt  DateTime @default(now()) @map("suppressed_at")
+
+  // Relations
+  contact       Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@index([contactId])
+  @@index([suppressedBy])
+  @@index([suppressedAt])
+  @@map("suppression_history")
+}
+
+/// List Health Snapshot - Weekly health check records
+model ListHealthSnapshot {
+  id                  Int      @id @default(autoincrement())
+  listId              String   @map("list_id")
+
+  // Metrics
+  contactCount        Int      @map("contact_count")
+  activeContactCount  Int      @map("active_contact_count")
+  bounceRate          Float    @map("bounce_rate")
+  hardBounceRate      Float    @map("hard_bounce_rate")
+  softBounceRate      Float    @map("soft_bounce_rate")
+  deliveryRate        Float    @map("delivery_rate")
+  spamRate            Float    @default(0) @map("spam_rate")
+  unsubscribeRate     Float    @default(0) @map("unsubscribe_rate")
+
+  // Health assessment
+  healthScore         Int      @map("health_score") // 0-100
+  healthGrade         String   @map("health_grade") // excellent, good, fair, poor, critical
+  aiAssessment        String   @map("ai_assessment") // AI's analysis
+  riskFactors         Json     @map("risk_factors") // Array of identified risks
+  recommendations     Json     // Array of AI recommendations
+
+  // Trends
+  trendDirection      String?  @map("trend_direction") // improving, stable, declining
+  previousHealthScore Int?     @map("previous_health_score")
+
+  // Timestamps
+  checkedAt           DateTime @default(now()) @map("checked_at")
+
+  // Relations
+  list                ContactList @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@index([listId, checkedAt])
+  @@map("list_health_snapshots")
+}
+
+/// List Maintenance Log - Post-campaign maintenance records
+model ListMaintenanceLog {
+  id                    Int      @id @default(autoincrement())
+  campaignScheduleId    Int?     @map("campaign_schedule_id") // Link to lifecycle campaign
+  listId                String   @map("list_id")
+  maintenanceType       MaintenanceAction @map("maintenance_type")
+
+  // Actions taken
+  contactsSuppressed    Int      @default(0) @map("contacts_suppressed")
+  contactsRebalanced    Int      @default(0) @map("contacts_rebalanced")
+  contactsAdded         Int      @default(0) @map("contacts_added")
+  contactsRemoved       Int      @default(0) @map("contacts_removed")
+
+  // AI analysis
+  aiRecommendation      String   @map("ai_recommendation")
+  aiConfidence          Float    @map("ai_confidence") // 0-1
+  suppressionPlan       Json?    @map("suppression_plan") // Detailed plan
+  rebalancingPlan       Json?    @map("rebalancing_plan") // Detailed plan
+
+  // Results
+  status                String   @default("completed") // pending, in_progress, completed, failed
+  errorMessage          String?  @map("error_message")
+
+  // Timestamps
+  executedAt            DateTime @default(now()) @map("executed_at")
+  completedAt           DateTime? @map("completed_at")
+
+  // Relations
+  list                  ContactList @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@index([campaignScheduleId])
+  @@index([listId, executedAt])
+  @@index([maintenanceType])
+  @@map("list_maintenance_logs")
+}
+
+/// List type enum
+enum ListType {
+  MASTER              // Master user list (source of truth)
+  CAMPAIGN_ROUND_1    // Campaign list for Tuesday sends
+  CAMPAIGN_ROUND_2    // Campaign list for Thursday sends
+  CAMPAIGN_ROUND_3    // Campaign list for next Tuesday sends
+  SUPPRESSION         // Contacts to never send to
+  CUSTOM              // Custom user-created lists
+}
+
+/// Contact status enum
+enum ContactStatus {
+  ACTIVE              // Active, can receive emails
+  BOUNCED_SOFT        // Soft bounce, temporary issue
+  BOUNCED_HARD        // Hard bounce, invalid email
+  SUPPRESSED          // Suppressed, do not send
+  UNSUBSCRIBED        // Unsubscribed from emails
+  SPAM_COMPLAINT      // Marked as spam
+}
+
+/// Maintenance action enum
+enum MaintenanceAction {
+  POST_CAMPAIGN_CLEANUP  // After campaign completion
+  WEEKLY_HEALTH_CHECK    // Monday health check
+  MANUAL_SYNC           // Manual sync trigger
+  REBALANCING           // List rebalancing
+  SUPPRESSION           // Contact suppression
+  IMPORT                // CSV import
+}

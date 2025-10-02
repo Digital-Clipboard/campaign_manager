@@ -45,10 +45,10 @@ export class CampaignOrchestratorService {
   private mailjetClient: MailjetAgentClient;
 
   constructor() {
-    this.scheduleService = new CampaignScheduleService();
-    this.notificationService = new NotificationService();
-    this.preFlightService = new PreFlightVerificationService();
-    this.metricsService = new MetricsCollectionService();
+    this.scheduleService = new CampaignScheduleService(prisma);
+    this.notificationService = new NotificationService(prisma);
+    this.preFlightService = new PreFlightVerificationService(prisma);
+    this.metricsService = new MetricsCollectionService(prisma);
     this.mailjetClient = new MailjetAgentClient();
   }
 
