@@ -1,5 +1,5 @@
 import { Queue, Worker } from 'bullmq';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { NotificationService } from '@/services/notification/notification.service';
 import { EmailService } from '@/services/notification/email.service';
 import { SlackService } from '@/services/notification/slack.service';
@@ -32,7 +32,6 @@ export const notificationQueue = new Queue('notifications', {
 
 // Worker to process notification jobs
 export const notificationWorker = new Worker('notifications', async (job) => {
-  const prisma = new PrismaClient();
   const emailService = new EmailService();
   const slackService = new SlackService();
 
@@ -322,7 +321,6 @@ export async function scheduleNotificationJobs() {
 // Process digest jobs
 notificationQueue.on('completed', async (job) => {
   if (job.name === 'send-daily-digests' || job.name === 'send-weekly-digests') {
-    const prisma = new PrismaClient();
     const notificationService = new NotificationService(prisma);
 
     try {
@@ -353,7 +351,6 @@ notificationQueue.on('completed', async (job) => {
 // Process overdue task notifications
 notificationQueue.on('completed', async (job) => {
   if (job.name === 'check-overdue-tasks') {
-    const prisma = new PrismaClient();
     const notificationService = new NotificationService(prisma);
 
     try {
@@ -397,7 +394,6 @@ notificationQueue.on('completed', async (job) => {
 // Process approval reminder notifications
 notificationQueue.on('completed', async (job) => {
   if (job.name === 'send-approval-reminders') {
-    const prisma = new PrismaClient();
     const notificationService = new NotificationService(prisma);
 
     try {

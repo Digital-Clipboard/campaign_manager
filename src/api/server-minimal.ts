@@ -1,6 +1,6 @@
 import fastify from 'fastify';
-import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
+import { prisma } from '../lib/prisma';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
 import { CampaignSlackNotifications } from '../services/slack/campaign-notifications';
@@ -49,9 +49,6 @@ export async function createServer() {
       } : undefined
     },
   });
-
-  // Initialize Prisma
-  const prisma = new PrismaClient();
 
   // MailJet MCP helper function
   const generateMailjetToken = () => {

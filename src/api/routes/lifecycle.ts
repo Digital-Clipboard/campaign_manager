@@ -368,9 +368,6 @@ export default async function lifecycleRoutes(server: FastifyInstance) {
       }
 
       // Update schedule in database
-      const { PrismaClient } = await import('@prisma/client');
-      const prisma = new PrismaClient();
-
       const updatedSchedule = await prisma.lifecycleCampaignSchedule.update({
         where: { id: scheduleId },
         data: {
@@ -381,8 +378,6 @@ export default async function lifecycleRoutes(server: FastifyInstance) {
 
       // Reschedule jobs
       const jobs = await lifecycleScheduler.rescheduleLifecycleJobs(updatedSchedule);
-
-      await prisma.$disconnect();
 
       return reply.send({
         success: true,

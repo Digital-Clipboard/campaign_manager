@@ -3,8 +3,9 @@
  * Verifies campaign readiness before launch with AI-powered analysis
  */
 
-import { PrismaClient, LifecycleCampaignSchedule } from '@prisma/client';
+import { LifecycleCampaignSchedule } from '@prisma/client';
 import { logger } from '@/utils/logger';
+import { prisma } from '@/lib/prisma';
 import { MailjetAgentClient } from '@/integrations/mcp-clients/mailjet-agent-client';
 import {
   ListQualityAgent,
@@ -15,8 +16,6 @@ import {
   type AgentContext
 } from './agents';
 import { CampaignMetricsService } from './campaign-metrics.service';
-
-const prisma = new PrismaClient();
 
 export interface PreFlightResult {
   isReady: boolean;

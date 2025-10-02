@@ -10,7 +10,8 @@ import lifecycleQueue, {
   PreFlightJobData,
   LaunchWarningJobData,
   LaunchJobData,
-  WrapUpJobData
+  WrapUpJobData,
+  ListMaintenanceJobData
 } from './lifecycle-queue';
 
 export interface ScheduledJobs {
@@ -19,6 +20,7 @@ export interface ScheduledJobs {
   launchWarning?: string;
   launch?: string;
   wrapup?: string;
+  listMaintenance?: string;
 }
 
 export class LifecycleScheduler {
@@ -123,7 +125,24 @@ export class LifecycleScheduler {
     );
     jobs.wrapup = wrapUpJob.id?.toString();
 
-    logger.info('[LifecycleScheduler] All lifecycle jobs scheduled', {
+    // List Maintenance (Stage 6): T+24h
+    const listMaintenanceTime = new Date(launchTime.getTime() + 24 * 60 * 60 * 1000);
+    const listMaintenanceJob = await lifecycleQueue.add(
+      'list-maintenance',
+      {
+        campaignScheduleId: schedule.id,
+        campaignName: schedule.campaignName,
+        roundNumber: schedule.roundNumber,
+        listId: schedule.listId.toString() // Assumes listId exists in schedule
+      } as ListMaintenanceJobData,
+      {
+        delay: Math.max(0, listMaintenanceTime.getTime() - Date.now()),
+        jobId: `list-maintenance-${schedule.id}`
+      }
+    );
+    jobs.listMaintenance = listMaintenanceJob.id?.toString();
+
+    logger.info('[LifecycleScheduler] All lifecycle jobs scheduled (including list maintenance)', {
       campaignScheduleId: schedule.id,
       jobs
     });
@@ -142,7 +161,8 @@ export class LifecycleScheduler {
       `preflight-${campaignScheduleId}`,
       `launch-warning-${campaignScheduleId}`,
       `launch-${campaignScheduleId}`,
-      `wrapup-${campaignScheduleId}`
+      `wrapup-${campaignScheduleId}`,
+      `list-maintenance-${campaignScheduleId}`
     ];
 
     for (const jobId of jobIds) {

@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { logger } from '@/utils/logger';
+import { prisma } from '@/lib/prisma';
 
 // Health check routes
 export async function healthRoutes(fastify: FastifyInstance) {
@@ -85,12 +86,8 @@ async function checkDatabase(): Promise<{ healthy: boolean; latency?: number; er
   try {
     const start = Date.now();
 
-    // Dynamic import to avoid circular dependency
-    const { PrismaClient } = await import('@prisma/client');
-    const prisma = new PrismaClient();
-
+    // Test database connection
     await prisma.$queryRaw`SELECT 1`;
-    await prisma.$disconnect();
 
     const latency = Date.now() - start;
     return { healthy: true, latency };

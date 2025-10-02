@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { logger } from '@/utils/logger';
 
 export interface SearchFilters {
@@ -104,10 +104,7 @@ export interface ApprovalSearchResult {
 }
 
 export class AdvancedSearchService {
-  private prisma: PrismaClient;
-
   constructor() {
-    this.prisma = new PrismaClient();
   }
 
   // Campaign Search
@@ -185,14 +182,14 @@ export class AdvancedSearchService {
     }
 
     // Get total count
-    const total = await this.prisma.campaign.count({ where });
+    const total = await prisma.campaign.count({ where });
 
     // Build sort
     const orderBy: any = {};
     orderBy[sort.field] = sort.direction;
 
     // Execute search
-    const campaigns = await this.prisma.campaign.findMany({
+    const campaigns = await prisma.campaign.findMany({
       where,
       include: {
         _count: {
@@ -322,14 +319,14 @@ export class AdvancedSearchService {
     }
 
     // Get total count
-    const total = await this.prisma.task.count({ where });
+    const total = await prisma.task.count({ where });
 
     // Build sort
     const orderBy: any = {};
     orderBy[sort.field] = sort.direction;
 
     // Execute search
-    const tasks = await this.prisma.task.findMany({
+    const tasks = await prisma.task.findMany({
       where,
       include: {
         campaign: {
@@ -410,14 +407,14 @@ export class AdvancedSearchService {
     }
 
     // Get total count
-    const total = await this.prisma.approval.count({ where });
+    const total = await prisma.approval.count({ where });
 
     // Build sort
     const orderBy: any = {};
     orderBy[sort.field] = sort.direction;
 
     // Execute search
-    const approvals = await this.prisma.approval.findMany({
+    const approvals = await prisma.approval.findMany({
       where,
       include: {
         campaign: {
@@ -498,7 +495,7 @@ export class AdvancedSearchService {
   ): Promise<{ id: string; name: string }> {
     logger.info('Saving search', { name, entityType, userId });
 
-    const savedSearch = await this.prisma.savedSearch.create({
+    const savedSearch = await prisma.savedSearch.create({
       data: {
         name,
         entityType,
@@ -522,7 +519,7 @@ export class AdvancedSearchService {
     entityType: string;
     createdAt: Date;
   }>> {
-    return this.prisma.savedSearch.findMany({
+    return prisma.savedSearch.findMany({
       where: { userId },
       select: {
         id: true,
@@ -535,7 +532,7 @@ export class AdvancedSearchService {
   }
 
   async executeSavedSearch(searchId: string, page: number = 1, limit: number = 20): Promise<any> {
-    const savedSearch = await this.prisma.savedSearch.findUnique({
+    const savedSearch = await prisma.savedSearch.findUnique({
       where: { id: searchId }
     });
 
@@ -561,22 +558,22 @@ export class AdvancedSearchService {
   // Private helper methods for facet generation
   private async generateCampaignFacets(baseWhere: any): Promise<any> {
     const [statuses, priorities, assignees, tags] = await Promise.all([
-      this.prisma.campaign.groupBy({
+      prisma.campaign.groupBy({
         by: ['status'],
         _count: { status: true },
         where: baseWhere
       }),
-      this.prisma.campaign.groupBy({
+      prisma.campaign.groupBy({
         by: ['priority'],
         _count: { priority: true },
         where: baseWhere
       }),
-      this.prisma.campaign.groupBy({
+      prisma.campaign.groupBy({
         by: ['assigneeEmail'],
         _count: { assigneeEmail: true },
         where: baseWhere
       }),
-      this.prisma.$queryRaw`
+      prisma.$queryRaw`
         SELECT unnest(tags) as tag, COUNT(*) as count
         FROM "Campaign"
         GROUP BY tag
@@ -595,22 +592,22 @@ export class AdvancedSearchService {
 
   private async generateTaskFacets(baseWhere: any): Promise<any> {
     const [statuses, priorities, assignees, tags] = await Promise.all([
-      this.prisma.task.groupBy({
+      prisma.task.groupBy({
         by: ['status'],
         _count: { status: true },
         where: baseWhere
       }),
-      this.prisma.task.groupBy({
+      prisma.task.groupBy({
         by: ['priority'],
         _count: { priority: true },
         where: baseWhere
       }),
-      this.prisma.task.groupBy({
+      prisma.task.groupBy({
         by: ['assigneeEmail'],
         _count: { assigneeEmail: true },
         where: baseWhere
       }),
-      this.prisma.$queryRaw`
+      prisma.$queryRaw`
         SELECT unnest(tags) as tag, COUNT(*) as count
         FROM "Task"
         GROUP BY tag
@@ -629,17 +626,17 @@ export class AdvancedSearchService {
 
   private async generateApprovalFacets(baseWhere: any): Promise<any> {
     const [statuses, urgencies, approvers] = await Promise.all([
-      this.prisma.approval.groupBy({
+      prisma.approval.groupBy({
         by: ['status'],
         _count: { status: true },
         where: baseWhere
       }),
-      this.prisma.approval.groupBy({
+      prisma.approval.groupBy({
         by: ['urgency'],
         _count: { urgency: true },
         where: baseWhere
       }),
-      this.prisma.approval.groupBy({
+      prisma.approval.groupBy({
         by: ['approverEmail'],
         _count: { approverEmail: true },
         where: baseWhere

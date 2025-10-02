@@ -1,11 +1,10 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { NotificationService } from '@/services/notification/notification.service';
 import { authMiddleware } from '@/api/middleware/auth';
 import { logger } from '@/utils/logger';
 
 export async function notificationRoutes(fastify: FastifyInstance) {
-  const prisma = new PrismaClient();
   const notificationService = new NotificationService(prisma);
 
   // Add authentication to all routes

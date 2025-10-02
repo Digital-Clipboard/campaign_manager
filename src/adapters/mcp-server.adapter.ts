@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { CacheService } from '@/services/cache/cache.service';
 import { CampaignService } from '@/services/campaign/campaign.service';
 import { TaskService } from '@/services/task/task.service';
@@ -134,7 +134,6 @@ export class MCPServerAdapter {
   private readonly MCP_SERVER_VERSION = '1.0.0';
   private readonly MCP_SERVER_NAME = 'campaign-manager';
 
-  private prisma: PrismaClient;
   private cacheService: CacheService;
   private campaignService: CampaignService;
   private taskService: TaskService;
@@ -145,15 +144,14 @@ export class MCPServerAdapter {
   private notificationService: NotificationService;
 
   constructor() {
-    this.prisma = new PrismaClient();
     this.cacheService = new CacheService();
-    this.campaignService = new CampaignService(this.prisma, this.cacheService);
-    this.taskService = new TaskService(this.prisma, this.cacheService);
-    this.teamService = new TeamService(this.prisma, this.cacheService);
-    this.approvalService = new ApprovalService(this.prisma, this.cacheService);
-    this.dashboardService = new DashboardService(this.prisma, this.cacheService);
-    this.analyticsService = new AnalyticsService(this.prisma, this.cacheService);
-    this.notificationService = new NotificationService(this.prisma);
+    this.campaignService = new CampaignService(prisma, this.cacheService);
+    this.taskService = new TaskService(prisma, this.cacheService);
+    this.teamService = new TeamService(prisma, this.cacheService);
+    this.approvalService = new ApprovalService(prisma, this.cacheService);
+    this.dashboardService = new DashboardService(prisma, this.cacheService);
+    this.analyticsService = new AnalyticsService(prisma, this.cacheService);
+    this.notificationService = new NotificationService(prisma);
   }
 
   registerMCPEndpoint(fastify: FastifyInstance) {

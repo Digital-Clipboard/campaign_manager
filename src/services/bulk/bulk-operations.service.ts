@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { logger } from '@/utils/logger';
 import { NotificationService } from '@/services/notification/notification.service';
 import { CampaignService } from '@/services/campaign/campaign.service';
@@ -42,14 +42,12 @@ export interface BulkApprovalUpdate {
 }
 
 export class BulkOperationsService {
-  private prisma: PrismaClient;
   private notificationService: NotificationService;
   private campaignService: CampaignService;
   private taskService: TaskService;
   private approvalService: ApprovalService;
 
   constructor() {
-    this.prisma = new PrismaClient();
     this.notificationService = new NotificationService();
     this.campaignService = new CampaignService();
     this.taskService = new TaskService();
@@ -92,7 +90,7 @@ export class BulkOperationsService {
         if (updates.assigneeEmail) updateData.assigneeEmail = updates.assigneeEmail;
         if (updates.tags) updateData.tags = updates.tags;
 
-        await this.prisma.campaign.update({
+        await prisma.campaign.update({
           where: { id: campaignId },
           data: {
             ...updateData,
@@ -154,11 +152,11 @@ export class BulkOperationsService {
         }
 
         // Delete associated tasks and approvals first
-        await this.prisma.task.deleteMany({ where: { campaignId } });
-        await this.prisma.approval.deleteMany({ where: { campaignId } });
+        await prisma.task.deleteMany({ where: { campaignId } });
+        await prisma.approval.deleteMany({ where: { campaignId } });
 
         // Delete campaign
-        await this.prisma.campaign.delete({ where: { id: campaignId } });
+        await prisma.campaign.delete({ where: { id: campaignId } });
 
         // Send notification if requested
         if (notifyTeam) {
@@ -224,7 +222,7 @@ export class BulkOperationsService {
         if (updates.estimatedHours !== undefined) updateData.estimatedHours = updates.estimatedHours;
         if (updates.tags) updateData.tags = updates.tags;
 
-        await this.prisma.task.update({
+        await prisma.task.update({
           where: { id: taskId },
           data: {
             ...updateData,
@@ -286,7 +284,7 @@ export class BulkOperationsService {
         }
 
         // Delete task
-        await this.prisma.task.delete({ where: { id: taskId } });
+        await prisma.task.delete({ where: { id: taskId } });
 
         // Send notification if requested
         if (notifyAssignees) {
@@ -350,7 +348,7 @@ export class BulkOperationsService {
         if (updates.approverEmail) updateData.approverEmail = updates.approverEmail;
         if (updates.dueDate) updateData.dueDate = updates.dueDate;
 
-        await this.prisma.approval.update({
+        await prisma.approval.update({
           where: { id: approvalId },
           data: {
             ...updateData,
@@ -412,17 +410,17 @@ export class BulkOperationsService {
         switch (entityType) {
           case 'campaign':
             tableName = 'campaign';
-            const campaign = await this.prisma.campaign.findUnique({ where: { id: entityId } });
+            const campaign = await prisma.campaign.findUnique({ where: { id: entityId } });
             entityName = campaign?.name || 'Unknown Campaign';
             break;
           case 'task':
             tableName = 'task';
-            const task = await this.prisma.task.findUnique({ where: { id: entityId } });
+            const task = await prisma.task.findUnique({ where: { id: entityId } });
             entityName = task?.title || 'Unknown Task';
             break;
           case 'approval':
             tableName = 'approval';
-            const approval = await this.prisma.approval.findUnique({ where: { id: entityId } });
+            const approval = await prisma.approval.findUnique({ where: { id: entityId } });
             entityName = approval?.stage || 'Unknown Approval';
             break;
           default:
@@ -430,7 +428,7 @@ export class BulkOperationsService {
         }
 
         // Update status
-        await (this.prisma as any)[tableName].update({
+        await (prisma as any)[tableName].update({
           where: { id: entityId },
           data: {
             status: newStatus,
@@ -499,19 +497,19 @@ export class BulkOperationsService {
           case 'campaign':
             tableName = 'campaign';
             fieldName = 'assigneeEmail';
-            const campaign = await this.prisma.campaign.findUnique({ where: { id: entityId } });
+            const campaign = await prisma.campaign.findUnique({ where: { id: entityId } });
             entityName = campaign?.name || 'Unknown Campaign';
             break;
           case 'task':
             tableName = 'task';
             fieldName = 'assigneeEmail';
-            const task = await this.prisma.task.findUnique({ where: { id: entityId } });
+            const task = await prisma.task.findUnique({ where: { id: entityId } });
             entityName = task?.title || 'Unknown Task';
             break;
           case 'approval':
             tableName = 'approval';
             fieldName = 'approverEmail';
-            const approval = await this.prisma.approval.findUnique({ where: { id: entityId } });
+            const approval = await prisma.approval.findUnique({ where: { id: entityId } });
             entityName = approval?.stage || 'Unknown Approval';
             break;
           default:
@@ -519,7 +517,7 @@ export class BulkOperationsService {
         }
 
         // Update assignment
-        await (this.prisma as any)[tableName].update({
+        await (prisma as any)[tableName].update({
           where: { id: entityId },
           data: {
             [fieldName]: assigneeEmail,
@@ -582,7 +580,7 @@ export class BulkOperationsService {
         const tableName = entityType;
 
         // Get current entity
-        const entity = await (this.prisma as any)[tableName].findUnique({
+        const entity = await (prisma as any)[tableName].findUnique({
           where: { id: entityId }
         });
 
@@ -597,7 +595,7 @@ export class BulkOperationsService {
         const newTags = [...new Set([...currentTags, ...tagsToAdd])];
 
         // Update entity
-        await (this.prisma as any)[tableName].update({
+        await (prisma as any)[tableName].update({
           where: { id: entityId },
           data: {
             tags: newTags,
@@ -643,7 +641,7 @@ export class BulkOperationsService {
         const tableName = entityType;
 
         // Get current entity
-        const entity = await (this.prisma as any)[tableName].findUnique({
+        const entity = await (prisma as any)[tableName].findUnique({
           where: { id: entityId }
         });
 
@@ -658,7 +656,7 @@ export class BulkOperationsService {
         const newTags = currentTags.filter((tag: string) => !tagsToRemove.includes(tag));
 
         // Update entity
-        await (this.prisma as any)[tableName].update({
+        await (prisma as any)[tableName].update({
           where: { id: entityId },
           data: {
             tags: newTags,

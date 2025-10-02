@@ -3,15 +3,14 @@
  * Orchestrates the entire campaign lifecycle from scheduling to wrap-up
  */
 
-import { PrismaClient, CampaignStatus } from '@prisma/client';
+import { CampaignStatus } from '@prisma/client';
 import { logger } from '@/utils/logger';
+import { prisma } from '@/lib/prisma';
 import { MailjetAgentClient } from '@/integrations/mcp-clients/mailjet-agent-client';
 import { CampaignScheduleService, type CreateCampaignScheduleParams } from './campaign-schedule.service';
 import { NotificationService } from './notification.service';
 import { PreFlightVerificationService } from './preflight-verification.service';
 import { MetricsCollectionService } from './metrics-collection.service';
-
-const prisma = new PrismaClient();
 
 export interface CampaignCreationParams {
   campaignName: string;
