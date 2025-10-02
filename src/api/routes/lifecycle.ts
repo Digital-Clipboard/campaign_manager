@@ -173,6 +173,31 @@ export default async function lifecycleRoutes(server: FastifyInstance) {
   });
 
   /**
+   * GET /campaigns
+   * List all campaign schedules
+   */
+  server.get('/campaigns', async (request, reply) => {
+    try {
+      const { prisma } = await import('@/lib/prisma');
+
+      const campaigns = await prisma.lifecycleCampaignSchedule.findMany({
+        orderBy: {
+          scheduledDate: 'asc'
+        }
+      });
+
+      return reply.send(campaigns);
+
+    } catch (error) {
+      logger.error('[Lifecycle API] Failed to list campaigns', { error });
+      return reply.status(500).send({
+        error: 'Failed to list campaigns',
+        details: String(error)
+      });
+    }
+  });
+
+  /**
    * GET /campaigns/:campaignName
    * Get status of all rounds for a campaign
    */
