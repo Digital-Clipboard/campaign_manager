@@ -4,6 +4,7 @@ import { NotificationService } from '@/services/notification/notification.servic
 import { CampaignService } from '@/services/campaign/campaign.service';
 import { TaskService } from '@/services/task/task.service';
 import { ApprovalService } from '@/services/approval/approval.service';
+import { CacheService } from '@/services/cache/cache.service';
 
 export interface BulkOperationResult {
   success: number;
@@ -48,10 +49,10 @@ export class BulkOperationsService {
   private approvalService: ApprovalService;
 
   constructor() {
-    this.notificationService = new NotificationService();
-    this.campaignService = new CampaignService();
-    this.taskService = new TaskService();
-    this.approvalService = new ApprovalService();
+    this.notificationService = new NotificationService(prisma);
+    this.campaignService = new CampaignService(prisma, new CacheService());
+    this.taskService = new TaskService(prisma, new CacheService());
+    this.approvalService = new ApprovalService(prisma, new CacheService());
   }
 
   // Bulk Campaign Operations

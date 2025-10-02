@@ -65,7 +65,7 @@ export class HealthMonitorService {
 
   constructor() {
     this.redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
-    this.notificationService = new NotificationService();
+    this.notificationService = new NotificationService(prisma);
     this.slackClient = new SlackManagerClient();
     this.startTime = new Date();
 
