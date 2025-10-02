@@ -186,7 +186,15 @@ export default async function lifecycleRoutes(server: FastifyInstance) {
         }
       });
 
-      return reply.send(campaigns);
+      // Convert BigInt to string for JSON serialization
+      const serializedCampaigns = campaigns.map(campaign => ({
+        ...campaign,
+        listId: campaign.listId.toString(),
+        mailjetDraftId: campaign.mailjetDraftId?.toString() || null,
+        mailjetCampaignId: campaign.mailjetCampaignId?.toString() || null
+      }));
+
+      return reply.send(serializedCampaigns);
 
     } catch (error) {
       logger.error('[Lifecycle API] Failed to list campaigns', { error });
